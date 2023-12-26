@@ -26,9 +26,9 @@ https://mohohan.com/393
 
 ### How to use
 
-1. In your Azure subscription: Create a Storage Account and a File Share. Then copy the Windows connection script from that File Share.
-2. In your developing environment: Clone this repo. Then create a file (from project root) named storage.ps1 and paste the Windows connection script on it. Then copy the file named winae.ps1 (from project root).
+1. In your Azure subscription: Create a Storage Account and a File Share. Then copy the Account Name, Account Key, and File Share.
+2. In your developing environment: Clone this repo. Then copy the file named winae.ps1 (from project root).
 3. In your Azure subscription: Paste winae.ps1 into File Share (to root folder).
 4. In your Adobe Admin Console https://adminconsole.adobe.com/ : Prepare the installation package (e.g., AE_en_US_WIN_64.zip). Then put it into the project root.
-5. In your developing environment: Open Dockerfile with text editor, modify the plugin section to fulfill your scenario.
+5. In your developing environment: Open Dockerfile (from project root) with text editor, modify the plugin section to fulfill your scenario, and modify the final section specifying Account Name, Account Key, and File Share.
 6. <TBA> ACR

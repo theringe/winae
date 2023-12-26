@@ -1,1 +1,1 @@
-while(1){ Start-Sleep -Seconds 1 ; echo "test" >> "C:\Windows\Temp\test.log" }
+while(1){ Start-Sleep -Seconds 1 ; echo "test" }

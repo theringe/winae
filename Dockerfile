@@ -12,25 +12,18 @@ RUN Set-ExecutionPolicy Bypass -Scope Process -Force; \
     del ./install-choco.ps1
 
 # Install Common Tools through Choco
-RUN choco install -y vim unzip ntop.portable azcopy10
-
-# Mount File Share from Storage Account and make a symlink
-COPY storage.ps1 storage.ps1
-RUN Set-ExecutionPolicy Bypass -Scope Process -Force; \
-    ./storage.ps1 ; \
-    del ./storage.ps1 ; \
-    cmd.exe /C "mklink /h /j C:\Users\CCH Z:\"
+RUN choco install -y unzip vim ntop.portable azcopy10
 
 # Install Adobe After Effects
 COPY AE_en_US_WIN_64.zip AE_en_US_WIN_64.zip
 RUN Set-ExecutionPolicy Bypass -Scope Process -Force; \
-    move "AE_en_US_WIN_64.zip" "C:\Users\CCH" ; \
-    cd "C:\Users\CCH" ; \
+    move "AE_en_US_WIN_64.zip" "C:\Users\ContainerAdministrator" ; \
+    cd "C:\Users\ContainerAdministrator" ; \
     unzip AE_en_US_WIN_64.zip ; \
     cd AE ; \
     cd Build ; \
     cmd.exe /C "setup.exe --silent --INSTALLLANGUAGE=en_US" ; \
-    cd "C:\Users\CCH" ; \
+    cd "C:\Users\ContainerAdministrator" ; \
     del AE_en_US_WIN_64.zip
 
 # Install Plugin: Rowbyte Plexus
@@ -49,6 +42,10 @@ RUN Set-ExecutionPolicy Bypass -Scope Process -Force; \
     unzip "RWBYTE.zip" ; \
     del "RWBYTE.zip"
 
-# Launch
-CMD Start-Sleep 5 ; \
-    powershell.exe C:/Users/CCH/winae.ps1
+# Mount File Share from Storage Account and Launch
+# Please specify your Account Name, Account Key, and File Share
+CMD $secpasswd = ConvertTo-SecureString '<YOUR_ACCOUNT_KEY_HERE>' -AsPlainText -Force ; \
+    $cred = New-Object System.Management.Automation.PSCredential('localhost\<YOUR_ACCOUNT_NAME_HERE>', $secpasswd) ; \
+    New-PSDrive -Name Z -PSProvider FileSystem -Root "\\<YOUR_ACCOUNT_NAME_HERE>.file.core.windows.net\<YOUR_FILE_SHARE_HERE>" -Persist -Credential $cred -Scope Global ; \
+    Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass ; \
+    Z:/winae.ps1
