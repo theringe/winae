@@ -33,14 +33,6 @@ RUN Set-ExecutionPolicy Bypass -Scope Process -Force; \
     cd "C:\Users\CCH" ; \
     del AE_en_US_WIN_64.zip
 
-# Crack Adobe After Effects (me only)
-COPY Adobe_After_Effects_2022.zip Adobe_After_Effects_2022.zip
-RUN Set-ExecutionPolicy Bypass -Scope Process -Force; \
-    move "Adobe_After_Effects_2022.zip" "C:\Program` Files\Adobe" ; \
-    cd "C:\Program` Files\Adobe" ; \
-    unzip "Adobe_After_Effects_2022.zip" ; \
-    del "Adobe_After_Effects_2022.zip"
-
 # Install Plugin: Rowbyte Plexus
 COPY Rowbyte.zip Rowbyte.zip
 RUN Set-ExecutionPolicy Bypass -Scope Process -Force; \
