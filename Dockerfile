@@ -43,9 +43,5 @@ RUN Set-ExecutionPolicy Bypass -Scope Process -Force; \
     del "RWBYTE.zip"
 
 # Mount File Share from Storage Account and Launch
-# Please specify your Account Name, Account Key, and File Share
-CMD $secpasswd = ConvertTo-SecureString '<YOUR_ACCOUNT_KEY_HERE>' -AsPlainText -Force ; \
-    $cred = New-Object System.Management.Automation.PSCredential('localhost\<YOUR_ACCOUNT_NAME_HERE>', $secpasswd) ; \
-    New-PSDrive -Name Z -PSProvider FileSystem -Root "\\<YOUR_ACCOUNT_NAME_HERE>.file.core.windows.net\<YOUR_FILE_SHARE_HERE>" -Persist -Credential $cred -Scope Global ; \
-    Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass ; \
-    Z:/winae.ps1
+COPY winae-wrapper.ps1 C:/Users/ContainerAdministrator/winae-wrapper.ps1
+CMD C:/Users/ContainerAdministrator/winae-wrapper.ps1

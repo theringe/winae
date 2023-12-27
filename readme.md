@@ -30,5 +30,6 @@ https://mohohan.com/393
 2. In your developing environment: Clone this repo. Then copy the file named winae.ps1 (from project root).
 3. In your Azure subscription: Paste winae.ps1 into File Share (to root folder).
 4. In your Adobe Admin Console https://adminconsole.adobe.com/ : Prepare the installation package (e.g., AE_en_US_WIN_64.zip). Then put it into the project root.
-5. In your developing environment: Open Dockerfile (from project root) with text editor, modify the plugin section to fulfill your scenario, and modify the final section specifying Account Name, Account Key, and File Share.
-6. <TBA> ACR
+5. In your developing environment: Open Dockerfile (from project root) with text editor, modify the plugin section to fulfill your scenario.
+6. In your developing environment: Open winae-wrapper.ps1 (from project root) with text editor, specifying Account Name, Account Key, and File Share.
+7. <TBA> ACR
