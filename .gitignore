@@ -2,3 +2,4 @@ Dockerfile.*
 *.zip
 memo.txt
 winae-wrapper.*.ps1
+winae.*.ps1
