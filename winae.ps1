@@ -100,11 +100,29 @@ $debug = 0;
     Write-Output "current worker count: $currentWorkerCount";
     # Retrieve running task count
     Write-Output "Retrieve running task count";
-    $runningTaskCount = (& $redisExec --no-auth-warning -h $redisHost -p $redisPort -a $redisPass keys ${redisPrefix}task:r:*).Length;
+    $runningTaskCount = & $redisExec --no-auth-warning -h $redisHost -p $redisPort -a $redisPass keys ${redisPrefix}task:r:*;
+    if ($runningTaskCount -is [array]) {
+        $runningTaskCount = $runningTaskCount.Length;
+    } else {
+        if ($runningTaskCount.Length -eq 0) {
+            $runningTaskCount = 0;
+        } else {
+            $runningTaskCount = 1;
+        }
+    }
     Write-Output "running task count: $runningTaskCount";
     # Retrieve pending task count
     Write-Output "Retrieve pending task count";
-    $pendingTaskCount = (& $redisExec --no-auth-warning -h $redisHost -p $redisPort -a $redisPass keys ${redisPrefix}task:p:*).Length;
+    $pendingTaskCount = & $redisExec --no-auth-warning -h $redisHost -p $redisPort -a $redisPass keys ${redisPrefix}task:p:*;
+    if ($pendingTaskCount -is [array]) {
+        $pendingTaskCount = $pendingTaskCount.Length;
+    } else {
+        if ($pendingTaskCount.Length -eq 0) {
+            $pendingTaskCount = 0;
+        } else {
+            $pendingTaskCount = 1;
+        }
+    }
     Write-Output "pending task count: $pendingTaskCount";
     # Scale Comparing Logic
     Write-Output "Scale Comparing logic:";
@@ -164,7 +182,17 @@ $debug = 0;
     Write-Output "=============================";
     Write-Output "STEP 4: Handling tasks";
     $pendingTasks = & $redisExec --no-auth-warning -h $redisHost -p $redisPort -a $redisPass keys ${redisPrefix}task:p:*;
-    if ($pendingTasks.Length -eq 0) {
+    $pendingTaskCount = 0;
+    if ($pendingTasks -is [array]) {
+        $pendingTaskCount = $pendingTasks.Length;
+    } else {
+        if ($pendingTasks.Length -eq 0) {
+            $pendingTaskCount = 0;
+        } else {
+            $pendingTaskCount = 1;
+        }
+    }
+    if ($pendingTaskCount -eq 0) {
         Write-Output "- No pending task, skip";
         continue base;
     } else {
@@ -209,7 +237,16 @@ $debug = 0;
         Write-Output "Check if all tasks are done";
         $projectName = $projectKey.Split(":")[2];
         $tasks = & $redisExec --no-auth-warning -h $redisHost -p $redisPort -a $redisPass keys ${redisPrefix}task:*:*:$projectName;
-        $taskCount = $tasks.Length;
+        $taskCount = 0;
+        if ($tasks -is [array]) {
+            $taskCount = $tasks.Length;
+        } else {
+            if ($tasks.Length -eq 0) {
+                $taskCount = 0;
+            } else {
+                $taskCount = 1;
+            }
+        }
         if ($taskCount -eq 0) {
             Write-Output "- No task, done";
             Write-Output "STEP 5.1: Delete project key";
@@ -237,7 +274,7 @@ $debug = 0;
             $videoFileNames = $videoFiles.Name;
             $videoFileNames = $videoFileNames | ForEach-Object { "file ${storageBase}\temp\${_}" };
             $videoFileNames = $videoFileNames -replace '\\', '/';
-            $videoFileNames | Out-File -FilePath "${storageBase}\temp\${projectName}.txt";
+            [System.IO.File]::WriteAllLines("${storageBase}\temp\${projectName}.txt", $videoFileNames);
             $res = & $ffmpegExec -y -safe 0 -f concat -i ${storageBase}\temp\${projectName}.txt -vcodec copy -acodec copy ${storageBase}\output\${projectName}.mov;
             $videoFiles = Get-ChildItem -Path "${storageBase}\temp" -Filter "${projectName}_*.mov";
             foreach ($videoFile in $videoFiles) {
