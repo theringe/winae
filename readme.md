@@ -33,3 +33,4 @@ https://mohohan.com/393
 5. In your developing environment: Open Dockerfile (from project root) with text editor, modify the plugin section to fulfill your scenario.
 6. In your developing environment: Open winae-wrapper.ps1 (from project root) with text editor, specifying Account Name, Account Key, and File Share.
 7. <TBA> ACR
+8. <TBA>
