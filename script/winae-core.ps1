@@ -5,7 +5,7 @@ $maxMachineCount = 10; # From 1 to 10
 $fixedMachineCount = 0; # Set to 0 to use minMachineCount and maxMachineCount, set to >=1 to use fixedMachineCount
 $warmupTime = 1800; # Specify the container warmup time in seconds
 $taskFrame = 54000; # Specify the frame count of the task (e.g., 30minutes * 60seconds * 30frames = 54000)
-$aeExec = "C:\Program` Files\Adobe\Adobe` After` Effects` 2022\Support` Files\aerender.exe";
+$aeExec = "C:\Users\ContainerAdministrator\aerender.exe";
 $aeRetry = 3;
 $storageBase = "A:"; # Specify the storage base path (e.g., A:)
 $ffmpegExec = "ffmpeg.exe";
