@@ -29,8 +29,7 @@ RUN Set-ExecutionPolicy Bypass -Scope Process -Force; \
 
 # Create symbolic link for aerender.exe
 RUN Set-ExecutionPolicy Bypass -Scope Process -Force; \
-    cd "C:\Program` Files\Adobe\Adobe` After` Effects` 2022\Support` Files" ; \
-    cmd.exe /C "mklink /h C:\Users\ContainerAdministrator\aerender.exe aerender.exe"
+    New-Item -ItemType SymbolicLink -Path "C:\Users\ContainerAdministrator\AE" -Target "C:\Program` Files\Adobe\Adobe` After` Effects` 2022\Support` Files";
 
 # Install Plugin: Rowbyte Plexus
 COPY aepack/Rowbyte.zip Rowbyte.zip

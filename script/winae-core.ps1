@@ -5,7 +5,7 @@ $maxMachineCount = 10; # From 1 to 10
 $fixedMachineCount = 0; # Set to 0 to use minMachineCount and maxMachineCount, set to >=1 to use fixedMachineCount
 $warmupTime = 1800; # Specify the container warmup time in seconds
 $taskFrame = 54000; # Specify the frame count of the task (e.g., 30minutes * 60seconds * 30frames = 54000)
-$aeExec = "C:\Users\ContainerAdministrator\aerender.exe";
+$aeExec = "C:\Users\ContainerAdministrator\AE\aerender.exe";
 $aeRetry = 3;
 $storageBase = "A:"; # Specify the storage base path (e.g., A:)
 $ffmpegExec = "ffmpeg.exe";
@@ -24,21 +24,6 @@ function winae ($aadClientId, $aadTenantId, $aadSecretId, $subscriptionId, $reso
     }
     if (!(Test-Path "${storageBase}\media")) {
         New-Item -Path "${storageBase}\media" -ItemType Directory;
-    }
-    if (!(Test-Path "${storageBase}\tool")) {
-        New-Item -Path "${storageBase}\tool" -ItemType Directory;
-        New-Item -Path "${storageBase}\tool\redis" -ItemType Directory;
-    }
-    if (!(Test-Path "${storageBase}\tool\ffmpeg\bin\ffmpeg.exe")) {
-        Invoke-WebRequest -Uri "https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-win64-gpl.zip" -OutFile "${storageBase}\tool\ffmpeg.zip";
-        Expand-Archive -Path "${storageBase}\tool\ffmpeg.zip" -DestinationPath "${storageBase}\tool";
-        Rename-Item -Path "${storageBase}\tool\ffmpeg-master-latest-win64-gpl" -NewName "${storageBase}\tool\ffmpeg";
-        Remove-Item -Path "${storageBase}\tool\ffmpeg.zip";
-    }
-    if (!(Test-Path "${storageBase}\tool\redis\redis-cli.exe")) {
-        Invoke-WebRequest -Uri "https://github.com/tporadowski/redis/releases/download/v5.0.14.1/Redis-x64-5.0.14.1.zip" -OutFile "${storageBase}\tool\redis.zip";
-        Expand-Archive -Path "${storageBase}\tool\redis.zip" -DestinationPath "${storageBase}\tool\redis";
-        Remove-Item -Path "${storageBase}\tool\redis.zip";
     }
     # 1. Polling interval
     Write-Output "=============================";
@@ -310,7 +295,7 @@ function winae ($aadClientId, $aadTenantId, $aadSecretId, $subscriptionId, $reso
                 $retry++;
                 Write-Output "Launch AE: $retry";
                 & $aeExec -project "${storageBase}\project\${projectFileName}" -comp "$canvasName" -output "${storageBase}\temp\${projectName}_${taskIndex}.mov" -s $taskStart -e $taskEnd | Tee-Object -Variable res;
-                $errflag = $res | Select-String -Pattern "aerender ERROR:";
+                $errflag = $res | Select-String -Pattern "aerender ERROR";
                 if ($errflag.Length -eq 0) {
                     Write-Output "- Done";
                     break launchAE;
