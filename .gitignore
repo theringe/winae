@@ -4,3 +4,4 @@ memo.txt
 script/winae-wrapper.*.ps1
 script/winae.*.ps1
 script/winae-core.*.ps1
+workspace/
