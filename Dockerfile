@@ -6,16 +6,16 @@ LABEL maintainer="ringe.chen@microsoft.com"
 SHELL ["powershell", "-Command", "$ErrorActionPreference = 'Stop'; $ProgressPreference = 'SilentlyContinue';"]
 
 # Install Choco
-COPY install-choco.ps1 install-choco.ps1
+COPY aepack/install-choco.ps1 install-choco.ps1
 RUN Set-ExecutionPolicy Bypass -Scope Process -Force; \
     ./install-choco.ps1 ; \
     del ./install-choco.ps1
 
-# Install Common Tools through Choco
-RUN choco install -y unzip vim ntop.portable azcopy10
+# Install Common Tools through Choco (ffmpeg redis are must)
+RUN choco install -y unzip vim ntop.portable azcopy10 ffmpeg redis
 
 # Install Adobe After Effects
-COPY AE_en_US_WIN_64.zip AE_en_US_WIN_64.zip
+COPY aepack/AE_en_US_WIN_64.zip AE_en_US_WIN_64.zip
 RUN Set-ExecutionPolicy Bypass -Scope Process -Force; \
     move "AE_en_US_WIN_64.zip" "C:\Users\ContainerAdministrator" ; \
     cd "C:\Users\ContainerAdministrator" ; \
@@ -24,10 +24,16 @@ RUN Set-ExecutionPolicy Bypass -Scope Process -Force; \
     cd Build ; \
     cmd.exe /C "setup.exe --silent --INSTALLLANGUAGE=en_US" ; \
     cd "C:\Users\ContainerAdministrator" ; \
-    del AE_en_US_WIN_64.zip
+    del AE_en_US_WIN_64.zip ; \
+    rm -r AE
+
+# Create symbolic link for aerender.exe
+RUN Set-ExecutionPolicy Bypass -Scope Process -Force; \
+    cd "C:\Program` Files\Adobe\Adobe` After` Effects` 2022\Support` Files" ; \
+    cmd.exe /C "mklink /h C:\Users\ContainerAdministrator\aerender.exe aerender.exe"
 
 # Install Plugin: Rowbyte Plexus
-COPY Rowbyte.zip Rowbyte.zip
+COPY aepack/Rowbyte.zip Rowbyte.zip
 RUN Set-ExecutionPolicy Bypass -Scope Process -Force; \
     move "Rowbyte.zip" "C:\Program` Files\Adobe\Adobe` After` Effects` 2022\Support` Files\Plug-ins" ; \
     cd "C:\Program` Files\Adobe\Adobe` After` Effects` 2022\Support` Files\Plug-ins" ; \
@@ -35,7 +41,7 @@ RUN Set-ExecutionPolicy Bypass -Scope Process -Force; \
     del "Rowbyte.zip"
 
 # Register Plugin: Rowbyte Plexus
-COPY RWBYTE.zip RWBYTE.zip
+COPY aepack/RWBYTE.zip RWBYTE.zip
 RUN Set-ExecutionPolicy Bypass -Scope Process -Force; \
     move "RWBYTE.zip" "C:\Users\All` Users" ; \
     cd "C:\Users\All` Users" ; \
@@ -43,5 +49,5 @@ RUN Set-ExecutionPolicy Bypass -Scope Process -Force; \
     del "RWBYTE.zip"
 
 # Mount File Share from Storage Account and Launch
-COPY winae-wrapper.ps1 C:/Users/ContainerAdministrator/winae-wrapper.ps1
+COPY script/winae-wrapper.ps1 C:/Users/ContainerAdministrator/winae-wrapper.ps1
 CMD C:/Users/ContainerAdministrator/winae-wrapper.ps1

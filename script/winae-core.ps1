@@ -8,10 +8,38 @@ $taskFrame = 54000; # Specify the frame count of the task (e.g., 30minutes * 60s
 $aeExec = "C:\Program` Files\Adobe\Adobe` After` Effects` 2022\Support` Files\aerender.exe";
 $aeRetry = 3;
 $storageBase = "A:"; # Specify the storage base path (e.g., A:)
-$ffmpegExec = "$storageBase\ffmpeg.exe";
-$redisExec = "$storageBase\redis-cli.exe";
+$ffmpegExec = "ffmpeg.exe";
+$redisExec = "redis-cli.exe";
 $debug = 0;
 function winae ($aadClientId, $aadTenantId, $aadSecretId, $subscriptionId, $resourceGroup, $appName, $aspName, $redisHost, $redisPort, $redisPass, $redisPrefix) {
+    # 0. Create folders and tools (only for first time)
+    if (!(Test-Path "${storageBase}\project")) {
+        New-Item -Path "${storageBase}\project" -ItemType Directory;
+    }
+    if (!(Test-Path "${storageBase}\temp")) {
+        New-Item -Path "${storageBase}\temp" -ItemType Directory;
+    }
+    if (!(Test-Path "${storageBase}\output")) {
+        New-Item -Path "${storageBase}\output" -ItemType Directory;
+    }
+    if (!(Test-Path "${storageBase}\media")) {
+        New-Item -Path "${storageBase}\media" -ItemType Directory;
+    }
+    if (!(Test-Path "${storageBase}\tool")) {
+        New-Item -Path "${storageBase}\tool" -ItemType Directory;
+        New-Item -Path "${storageBase}\tool\redis" -ItemType Directory;
+    }
+    if (!(Test-Path "${storageBase}\tool\ffmpeg\bin\ffmpeg.exe")) {
+        Invoke-WebRequest -Uri "https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-win64-gpl.zip" -OutFile "${storageBase}\tool\ffmpeg.zip";
+        Expand-Archive -Path "${storageBase}\tool\ffmpeg.zip" -DestinationPath "${storageBase}\tool";
+        Rename-Item -Path "${storageBase}\tool\ffmpeg-master-latest-win64-gpl" -NewName "${storageBase}\tool\ffmpeg";
+        Remove-Item -Path "${storageBase}\tool\ffmpeg.zip";
+    }
+    if (!(Test-Path "${storageBase}\tool\redis\redis-cli.exe")) {
+        Invoke-WebRequest -Uri "https://github.com/tporadowski/redis/releases/download/v5.0.14.1/Redis-x64-5.0.14.1.zip" -OutFile "${storageBase}\tool\redis.zip";
+        Expand-Archive -Path "${storageBase}\tool\redis.zip" -DestinationPath "${storageBase}\tool\redis";
+        Remove-Item -Path "${storageBase}\tool\redis.zip";
+    }
     # 1. Polling interval
     Write-Output "=============================";
     Write-Output "STEP 1: Polling interval: $interval seconds";

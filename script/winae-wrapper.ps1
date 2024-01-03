@@ -10,5 +10,5 @@ Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
 #     powershell.exe C:/Users/ContainerAdministrator/winae-wrapper.ps1
 # PSDrive mount is session oriented, so we cannot go to A drive from our login (either SSH or console).
 Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
-A:/winae.ps1
+A:/tool/winae.ps1
 

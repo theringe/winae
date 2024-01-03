@@ -1,6 +1,6 @@
+aepack/*.zip
 Dockerfile.*
-*.zip
 memo.txt
-winae-wrapper.*.ps1
-winae.*.ps1
-winae-core.*.ps1
+script/winae-wrapper.*.ps1
+script/winae.*.ps1
+script/winae-core.*.ps1
