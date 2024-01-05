@@ -4,10 +4,11 @@ $minMachineCount = 1; # From 1 to 10
 $maxMachineCount = 10; # From 1 to 10
 $fixedMachineCount = 0; # Set to 0 to use minMachineCount and maxMachineCount, set to >=1 to use fixedMachineCount
 $warmupTime = 1800; # Specify the container warmup time in seconds
-$taskFrame = 54000; # Specify the frame count of the task (e.g., 30minutes * 60seconds * 30frames = 54000)
+$taskFrame = 1440; # Specify the frame count of the task (e.g., 1minutes * 60seconds * 30frames = 1440)
 $aeExec = "C:\Users\ContainerAdministrator\AE\aerender.exe";
 $aeRetry = 3;
 $storageBase = "A:"; # Specify the storage base path (e.g., A:)
+$storageTempBase = "C:\Users\ContainerAdministrator";
 $ffmpegExec = "ffmpeg.exe";
 $redisExec = "redis-cli.exe";
 $debug = 0;
@@ -201,6 +202,7 @@ function winae ($aadClientId, $aadTenantId, $aadSecretId, $subscriptionId, $reso
                 }
             }
             $currentEpoch = Get-Date -UFormat %s;
+            $currentEpoch = [math]::Floor($currentEpoch);
             $runningEndSoonTaskCount = 0;
             if ($epochs -is [array]) {
                 foreach ($epoch in $epochs) {
@@ -268,6 +270,7 @@ function winae ($aadClientId, $aadTenantId, $aadSecretId, $subscriptionId, $reso
             Write-Output "STEP 4.1: Add key to redis and prevent other machine to add the same key";
             $pendingTaskValue = & $redisExec --no-auth-warning -h $redisHost -p $redisPort -a $redisPass get $pendingTaskKey;
             $epoch = Get-Date -UFormat %s;
+            $epoch = [math]::Floor($epoch);
             $projectName = $pendingTaskKey.Split(":")[4];
             $runningTaskKey = "${redisPrefix}task:r:" + $epoch.ToString() + ":" + $projectName;
             $res = & $redisExec --no-auth-warning -h $redisHost -p $redisPort -a $redisPass setnx $runningTaskKey $pendingTaskValue;
@@ -289,13 +292,21 @@ function winae ($aadClientId, $aadTenantId, $aadSecretId, $subscriptionId, $reso
             $frameCount = $taskValue[4];
             $fileExt = $taskValue[5];
             $projectFileName = "${projectName}___${canvasName}___${frameCount}.${fileExt}";
+            # Render Hang issue
+            # taskkill /f /t /im AdobeIPCBroker.exe
+            # If (Test-Path "C:\Program Files (x86)\Common Files\Adobe\Adobe Desktop Common\IPCBox\AdobeIPCBroker.exe") {
+            #     Remove-Item -Path "C:\Program Files (x86)\Common Files\Adobe\Adobe Desktop Common\IPCBox\AdobeIPCBroker.exe";
+            # }
+            # If (Test-Path "C:\Program Files (x86)\Common Files\Adobe\OOBE\PDApp\IPC\AdobeIPCBroker.exe") {
+            #     Remove-Item -Path "C:\Program Files (x86)\Common Files\Adobe\OOBE\PDApp\IPC\AdobeIPCBroker.exe";
+            # }
             # Launch AE (-mfr ON 90 -mem_usage 90 90 -close DO_NOT_SAVE_CHANGES -continueOnMissingFootage -reuse)
             $retry = 0;
             :launchAE while ($retry -lt $aeRetry) {
                 $retry++;
                 Write-Output "Launch AE: $retry";
                 & $aeExec -project "${storageBase}\project\${projectFileName}" -comp "$canvasName" -output "${storageBase}\temp\${projectName}_${taskIndex}.mov" -s $taskStart -e $taskEnd | Tee-Object -Variable res;
-                $errflag = $res | Select-String -Pattern "aerender ERROR";
+                $errflag = $res | Select-String -Pattern "aerender ERROR|Error Code";
                 if ($errflag.Length -eq 0) {
                     Write-Output "- Done";
                     break launchAE;
@@ -354,18 +365,28 @@ function winae ($aadClientId, $aadTenantId, $aadSecretId, $subscriptionId, $reso
             $projectDoneFile = "${storageBase}\project\${projectDoneFileName}";
             Rename-Item -Path $projectFile -NewName $projectDoneFile;
             Write-Output "STEP 5.2: Combine video";
-            $videoFiles = Get-ChildItem -Path "${storageBase}\temp" -Filter "${projectName}_*.mov";
+            # Local merge
+            Copy-Item "${storageBase}\temp\${projectName}_*.mov" ${storageTempBase};
+            # $videoFiles = Get-ChildItem -Path "${storageBase}\temp" -Filter "${projectName}_*.mov";
+            $videoFiles = Get-ChildItem -Path "${storageTempBase}" -Filter "${projectName}_*.mov";
             $videoFiles = $videoFiles | Sort-Object -Property Name;
             $videoFileNames = $videoFiles.Name;
-            $videoFileNames = $videoFileNames | ForEach-Object { "file ${storageBase}\temp\${_}" };
+            $videoFileNames = $videoFileNames | ForEach-Object { "file ${storageTempBase}\${_}" };
             $videoFileNames = $videoFileNames -replace '\\', '/';
-            [System.IO.File]::WriteAllLines("${storageBase}\temp\${projectName}.txt", $videoFileNames);
-            $res = & $ffmpegExec -y -safe 0 -f concat -i ${storageBase}\temp\${projectName}.txt -vcodec copy -acodec copy ${storageBase}\output\${projectName}.mov;
+            [System.IO.File]::WriteAllLines("${storageTempBase}\${projectName}.txt", $videoFileNames);
+            $res = & $ffmpegExec -y -safe 0 -f concat -i ${storageTempBase}\${projectName}.txt -vcodec copy -acodec copy ${storageTempBase}\${projectName}.mov;
+            Copy-Item ${storageTempBase}\${projectName}.mov ${storageBase}\output\${projectName}.mov;
+            # Delete temp files
             $videoFiles = Get-ChildItem -Path "${storageBase}\temp" -Filter "${projectName}_*.mov";
             foreach ($videoFile in $videoFiles) {
                 Remove-Item -Path $videoFile.FullName;
             }
-            Remove-Item -Path "${storageBase}\temp\${projectName}.txt";
+            $videoFiles = Get-ChildItem -Path "${storageTempBase}" -Filter "${projectName}_*.mov";
+            foreach ($videoFile in $videoFiles) {
+                Remove-Item -Path $videoFile.FullName;
+            }
+            Remove-Item -Path "${storageTempBase}\${projectName}.txt";
+            Remove-Item -Path "${storageTempBase}\${projectName}.mov";
             $logFolder = "${storageBase}\project\${projectFileName} Logs";
             if (Test-Path $logFolder) {
                 Remove-Item -Path $logFolder -Recurse;
