@@ -1,10 +1,5 @@
 # Docker (ACR)
-aepack/*.zip
-Dockerfile.*
 # AppService
-script/winae-wrapper.*.ps1
-script/winae.*.ps1
-script/winae-core.*.ps1
 # Function App
 azurite/
 node_modules/
