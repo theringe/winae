@@ -27,9 +27,10 @@ RUN Set-ExecutionPolicy Bypass -Scope Process -Force; \
     del AE_en_US_WIN_64.zip ; \
     rm -r AE
 
-# Create symbolic link for aerender.exe
+# Create symbolic link for aerender.exe and start render node
 RUN Set-ExecutionPolicy Bypass -Scope Process -Force; \
-    New-Item -ItemType SymbolicLink -Path "C:\Users\ContainerAdministrator\AE" -Target "C:\Program` Files\Adobe\Adobe` After` Effects` 2022\Support` Files";
+    New-Item -ItemType SymbolicLink -Path "C:\Users\ContainerAdministrator\AE" -Target "C:\Program` Files\Adobe\Adobe` After` Effects` 2022\Support` Files"; \
+    New-Item -Path "C:\Users\All` Users\Documents" -Name "ae_render_only_node.txt" -ItemType File
 
 # Install Plugin: Rowbyte Plexus
 COPY aepack/Rowbyte.zip Rowbyte.zip

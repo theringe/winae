@@ -1,0 +1,288 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "resourcePrefix": {
+      "comments": "Resource Prefix",
+      "type": "string",
+      "defaultValue": "[concat('winae', '-', uniqueString(newGuid()))]",
+      "metadata": {
+        "description": "Do not modify this name"
+      }
+    },
+    "encryptionKey": {
+      "comments": "Encryption Key",
+      "type": "string",
+      "defaultValue": "R2W8WuO2iJvtxecwAjED1ItRUtr54jzQw8YRN+pzL9A=",
+      "metadata": {
+        "description": "Specify one key to encrypt the Storage Account connection string, you can use the default one or the one which generated after the deployment."
+      }
+    }
+  },
+  "variables": {
+    "storageAccountName": "[concat(replace(parameters('resourcePrefix'),'-', ''), 'sa')]",
+    "storageAccountAccountType": "Premium_ZRS",
+    "storageAccountKind": "FileStorage",
+    "storageAccountMinimumTlsVersion": "TLS1_2",
+    "storageAccountSupportsHttpsTrafficOnly": true,
+    "storageAccountAllowBlobPublicAccess": false,
+    "storageAccountAllowSharedKeyAccess": true,
+    "storageAccountDefaultToOAuthAuthentication": false,
+    "storageAccountPublicNetworkAccess": "Enabled",
+    "storageAccountAllowCrossTenantReplication": false,
+    "storageAccountNetworkAclsBypass": "AzureServices",
+    "storageAccountNetworkAclsDefaultAction": "Allow",
+    "storageAccountDnsEndpointType": "Standard",
+    "storageAccountEncryptionKeySource": "Microsoft.Storage",
+    "storageAccountEncryptionEnabled": true,
+    "storageAccountInfrastructureEncryptionEnabled": false,
+    "storageAccountIsShareSoftDeleteEnabled": true,
+    "storageAccountShareSoftDeleteRetentionDays": 7,
+    "redisName": "[concat(parameters('resourcePrefix'), '-', 'ctrl')]",
+    "redisSkuName": "Basic",
+    "redisSkuFamily": "C",
+    "redisSkuCapacity": 0,
+    "redisEnableNonSslPort": true,
+    "redisRedisVersion": "6",
+    "registryName": "[concat(replace(parameters('resourcePrefix'),'-', ''), 'cr')]",
+    "registrySkuName": "Standard",
+    "registryPublicNetworkAccess": "Enabled",
+    "registryZoneRedundancy": "disabled",
+    "planName": "[concat(parameters('resourcePrefix'), '-', 'plan')]",
+    "planSkuTier": "Dynamic",
+    "planSkuName": "Y1",
+    "planWorkerSize": "0",
+    "planWorkerSizeId": "0",
+    "planNumberOfWorkers": "1",
+    "functionName": "[concat(parameters('resourcePrefix'), '-', 'func')]",
+    "functionSiteConfigAppSettingsFUNCTIONS_EXTENSION_VERSION": "~4",
+    "functionSiteConfigAppSettingsFUNCTIONS_WORKER_RUNTIME": "node",
+    "functionSiteConfigAppSettingsWEBSITE_NODE_DEFAULT_VERSION": "~18",
+    "functionSiteConfigAppSettingsWEBSITE_CONTENTSHARE": "winae-func",
+    "functionSiteConfigUse32BitWorkerProcess": true,
+    "functionSiteConfigFtpsState": "FtpsOnly",
+    "functionSiteConfigNetFrameworkVersion": "v6.0",
+    "functionClientAffinityEnabled": false,
+    "functionPublicNetworkAccess": "Enabled",
+    "functionHttpsOnly": true,
+    "functionServerFarmId": "[concat('subscriptions/', subscription().subscriptionId, '/resourcegroups/', resourceGroup().name, '/providers/Microsoft.Web/serverfarms/', variables('planName'))]",
+    "scriptName": "[concat(replace(parameters('resourcePrefix'),'-', ''), 'sh')]"
+  },
+  "resources": [
+    {
+      "comments": "Storage Account",
+      "apiVersion": "2022-05-01",
+      "type": "Microsoft.Storage/storageAccounts",
+      "location": "[resourceGroup().location]",
+      "name": "[variables('storageAccountName')]",
+      "properties": {
+        "minimumTlsVersion": "[variables('storageAccountMinimumTlsVersion')]",
+        "supportsHttpsTrafficOnly": "[variables('storageAccountSupportsHttpsTrafficOnly')]",
+        "allowBlobPublicAccess": "[variables('storageAccountAllowBlobPublicAccess')]",
+        "allowSharedKeyAccess": "[variables('storageAccountAllowSharedKeyAccess')]",
+        "defaultToOAuthAuthentication": "[variables('storageAccountDefaultToOAuthAuthentication')]",
+        "publicNetworkAccess": "[variables('storageAccountPublicNetworkAccess')]",
+        "allowCrossTenantReplication": "[variables('storageAccountAllowCrossTenantReplication')]",
+        "networkAcls": {
+          "bypass": "[variables('storageAccountNetworkAclsBypass')]",
+          "defaultAction": "[variables('storageAccountNetworkAclsDefaultAction')]",
+          "ipRules": []
+        },
+        "dnsEndpointType": "[variables('storageAccountDnsEndpointType')]",
+        "encryption": {
+          "keySource": "[variables('storageAccountEncryptionKeySource')]",
+          "services": {
+            "blob": {
+              "enabled": "[variables('storageAccountEncryptionEnabled')]"
+            },
+            "file": {
+              "enabled": "[variables('storageAccountEncryptionEnabled')]"
+            },
+            "table": {
+              "enabled": "[variables('storageAccountEncryptionEnabled')]"
+            },
+            "queue": {
+              "enabled": "[variables('storageAccountEncryptionEnabled')]"
+            }
+          },
+          "requireInfrastructureEncryption": "[variables('storageAccountInfrastructureEncryptionEnabled')]"
+        }
+      },
+      "dependsOn": [],
+      "sku": {
+        "name": "[variables('storageAccountAccountType')]"
+      },
+      "kind": "[variables('storageAccountKind')]",
+      "tags": {}
+    },
+    {
+      "comments": "Storage Account: fileservices",
+      "name": "[concat(variables('storageAccountName'), '/default')]",
+      "type": "Microsoft.Storage/storageAccounts/fileservices",
+      "apiVersion": "2022-05-01",
+      "properties": {
+        "protocolSettings": {
+          "smb": {
+            "multichannel": {
+              "enabled": true
+            }
+          }
+        },
+        "shareDeleteRetentionPolicy": {
+          "enabled": "[variables('storageAccountIsShareSoftDeleteEnabled')]",
+          "days": "[variables('storageAccountShareSoftDeleteRetentionDays')]"
+        }
+      },
+      "dependsOn": [
+        "[concat('Microsoft.Storage/storageAccounts/', variables('storageAccountName'))]"
+      ]
+    },
+    {
+      "comments": "Redis",
+      "apiVersion": "2023-08-01",
+      "type": "Microsoft.Cache/redis",
+      "location": "[resourceGroup().location]",
+      "name": "[variables('redisName')]",
+      "dependsOn": [],
+      "properties": {
+        "sku": {
+          "name": "[variables('redisSkuName')]",
+          "family": "[variables('redisSkuFamily')]",
+          "capacity": "[variables('redisSkuCapacity')]"
+        },
+        "redisConfiguration": {},
+        "enableNonSslPort": "[variables('redisEnableNonSslPort')]",
+        "redisVersion": "[variables('redisRedisVersion')]"
+      },
+      "tags": {}
+    },
+    {
+      "comments": "ACR",
+      "apiVersion": "2022-02-01-preview",
+      "type": "Microsoft.ContainerRegistry/registries",
+      "location": "[resourceGroup().location]",
+      "name": "[variables('registryName')]",
+      "sku": {
+        "name": "[variables('registrySkuName')]"
+      },
+      "dependsOn": [],
+      "tags": {},
+      "properties": {
+        "publicNetworkAccess": "[variables('registryPublicNetworkAccess')]",
+        "zoneRedundancy": "[variables('registryZoneRedundancy')]"
+      }
+    },
+    {
+      "comments": "ASP nested resources due to Storage Account",
+      "apiVersion": "2017-05-10",
+      "type": "Microsoft.Resources/deployments",
+      "name": "ASPResourcesDeployment",
+      "dependsOn": [
+        "[concat('Microsoft.Storage/storageAccounts/', variables('storageAccountName'))]"
+      ],
+      "properties": {
+        "mode": "Incremental",
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "parameters": {},
+          "variables": {},
+          "resources": [
+            {
+              "comments": "ASP",
+              "apiVersion": "2018-11-01",
+              "type": "Microsoft.Web/serverfarms",
+              "location": "[resourceGroup().location]",
+              "name": "[variables('planName')]",
+              "kind": "",
+              "sku": {
+                "Tier": "[variables('planSkuTier')]",
+                "Name": "[variables('planSkuName')]"
+              },
+              "tags": {},
+              "dependsOn": [],
+              "properties": {
+                "name": "[variables('planName')]",
+                "workerSize": "[variables('planWorkerSize')]",
+                "workerSizeId": "[variables('planWorkerSizeId')]",
+                "numberOfWorkers": "[variables('planNumberOfWorkers')]"
+              }
+            },
+            {
+              "comments": "Function App",
+              "apiVersion": "2018-11-01",
+              "type": "Microsoft.Web/sites",
+              "location": "[resourceGroup().location]",
+              "name": "[variables('functionName')]",
+              "kind": "functionapp",
+              "tags": {},
+              "dependsOn": [
+                "[concat('Microsoft.Web/serverfarms/', variables('planName'))]"
+              ],
+              "properties": {
+                "name": "[variables('functionName')]",
+                "siteConfig": {
+                  "appSettings": [
+                    {
+                      "name": "FUNCTIONS_EXTENSION_VERSION",
+                      "value": "[variables('functionSiteConfigAppSettingsFUNCTIONS_EXTENSION_VERSION')]"
+                    },
+                    {
+                      "name": "FUNCTIONS_WORKER_RUNTIME",
+                      "value": "[variables('functionSiteConfigAppSettingsFUNCTIONS_WORKER_RUNTIME')]"
+                    },
+                    {
+                      "name": "WEBSITE_NODE_DEFAULT_VERSION",
+                      "value": "[variables('functionSiteConfigAppSettingsWEBSITE_NODE_DEFAULT_VERSION')]"
+                    },
+                    {
+                      "name": "AzureWebJobsStorage",
+                      "value": "[concat('DefaultEndpointsProtocol=https;AccountName=',variables('storageAccountName'),';AccountKey=',listKeys(resourceId('Microsoft.Storage/storageAccounts',variables('storageAccountName')),'2019-06-01').keys[0].value,';EndpointSuffix=','core.windows.net')]"
+                    },
+                    {
+                      "name": "WEBSITE_CONTENTAZUREFILECONNECTIONSTRING",
+                      "value": "[concat('DefaultEndpointsProtocol=https;AccountName=',variables('storageAccountName'),';AccountKey=',listKeys(resourceId('Microsoft.Storage/storageAccounts',variables('storageAccountName')),'2019-06-01').keys[0].value,';EndpointSuffix=','core.windows.net')]"
+                    },
+                    {
+                      "name": "WEBSITE_CONTENTSHARE",
+                      "value": "[variables('functionSiteConfigAppSettingsWEBSITE_CONTENTSHARE')]"
+                    }
+                  ],
+                  "cors": {
+                    "allowedOrigins": []
+                  },
+                  "use32BitWorkerProcess": "[variables('functionSiteConfigUse32BitWorkerProcess')]",
+                  "ftpsState": "[variables('functionSiteConfigFtpsState')]",
+                  "netFrameworkVersion": "[variables('functionSiteConfigNetFrameworkVersion')]"
+                },
+                "clientAffinityEnabled": "[variables('functionClientAffinityEnabled')]",
+                "virtualNetworkSubnetId": null,
+                "publicNetworkAccess": "[variables('functionPublicNetworkAccess')]",
+                "httpsOnly": "[variables('functionHttpsOnly')]",
+                "serverFarmId": "[variables('functionServerFarmId')]"
+              }
+            },
+            {
+              "comments": "CMD",
+              "apiVersion": "2020-10-01",
+              "type": "Microsoft.Resources/deploymentScripts",
+              "location": "[resourceGroup().location]",
+              "name": "[variables('scriptName')]",
+              "kind": "AzurePowerShell",
+              "properties": {
+                "azPowerShellVersion": "8.3",
+                "scriptContent": "[concat('function Create-AesManagedObject($key, $IV, $mode) { $aesManaged = New-Object \"System.Security.Cryptography.AesManaged\"; if ($mode=\"CBC\") { $aesManaged.Mode = [System.Security.Cryptography.CipherMode]::CBC } elseif ($mode=\"CFB\") {$aesManaged.Mode = [System.Security.Cryptography.CipherMode]::CFB} elseif ($mode=\"CTS\") {$aesManaged.Mode = [System.Security.Cryptography.CipherMode]::CTS} elseif ($mode=\"ECB\") {$aesManaged.Mode = [System.Security.Cryptography.CipherMode]::ECB} elseif ($mode=\"OFB\"){$aesManaged.Mode = [System.Security.Cryptography.CipherMode]::OFB} $aesManaged.Padding = [System.Security.Cryptography.PaddingMode]::PKCS7; $aesManaged.BlockSize = 128; $aesManaged.KeySize = 256; if ($IV) { if ($IV.getType().Name -eq \"String\") { $aesManaged.IV = [System.Convert]::FromBase64String($IV); } else { $aesManaged.IV = $IV; } } if ($key) { if ($key.getType().Name -eq \"String\") { $aesManaged.Key = [System.Convert]::FromBase64String($key); } else { $aesManaged.Key = $key; } } $aesManaged; }', 'function Encrypt-String($key, $plaintext) {$bytes = [System.Text.Encoding]::UTF8.GetBytes($plaintext);$aesManaged = Create-AesManagedObject $key;$encryptor = $aesManaged.CreateEncryptor();$encryptedData = $encryptor.TransformFinalBlock($bytes, 0, $bytes.Length);[byte[]] $fullData = $aesManaged.IV + $encryptedData;[System.Convert]::ToBase64String($fullData);}', '$k=New-Object \"System.Security.Cryptography.AesManaged\";$k.Mode=[System.Security.Cryptography.CipherMode]::ECB;$k.Padding=[System.Security.Cryptography.PaddingMode]::PKCS7;$k.BlockSize=128;$k.KeySize=256;$k.GenerateKey();$key1=[System.Convert]::ToBase64String($k.Key);', '$key2=\"', parameters('encryptionKey'), '\";', '$pass=\"', listKeys(resourceId('Microsoft.Storage/storageAccounts',variables('storageAccountName')),'2019-06-01').keys[0].value, '\"; ', '$username=\"', variables('storageAccountName'), '\";', '$enc1 = Encrypt-String $key1 \"${username}|${pass}\"; $enc2 = Encrypt-String $key2 \"${username}|${pass}\";', 'echo \"============\"; echo \"Key 1 (auto-generated)\"; echo $key1; echo \"Startup script 1 (auto-generated)\"; echo \"powershell.exe C:/Users/ContainerAdministrator/winae-wrapper.ps1 $enc1 \"; echo \"============\"; echo \"Key 2 (user-defined)\"; echo $key2; echo \"Startup script 2 (user-defined)\"; echo \"powershell.exe C:/Users/ContainerAdministrator/winae-wrapper.ps1 $enc2 \"; ')]",
+                "arguments": "",
+                "timeout": "PT1H",
+                "cleanupPreference": "OnSuccess",
+                "retentionInterval": "P1D"
+              }
+            }
+          ],
+          "outputs": {}
+        }
+      }
+    }
+  ],
+  "outputs": {}
+}
