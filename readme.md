@@ -26,7 +26,7 @@ https://mohohan.com/393
 
 ### How to use
 
-[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Ftheringe%2Fwinae%2Fmaster%2Fwinae.json%26api-version%3D6.0)
+[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Ftheringe%2Fwinae%2Fmaster%2Fwinae.json)
 1. In your Azure subscription: Create a Storage Account and a File Share. Then copy the Account Name, Account Key, and File Share.
 2. In your developing environment: Clone this repo. Then copy the file named winae.ps1 (from project root).
 3. In your Azure subscription: Paste winae.ps1 into File Share (to root folder).
