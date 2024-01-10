@@ -39,7 +39,6 @@
     "storageAccountIsShareSoftDeleteEnabled": true,
     "storageAccountShareSoftDeleteRetentionDays": 7,
     "storageAccountFileShareName": "winae-file",
-    "storageAccountFileShareAccessTier": "TransactionOptimized",
     "storageAccountFileShareShareQuota": 10240,
     "storageAccountFileShareEnabledProtocols": "SMB",
     "storageFunctionName": "[concat(replace(parameters('resourcePrefix'),'-', ''), 'sf')]",
@@ -157,7 +156,6 @@
         "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]"
       ],
       "properties": {
-          "accessTier": "[variables('storageAccountFileShareAccessTier')]",
           "shareQuota": "[variables('storageAccountFileShareShareQuota')]",
           "enabledProtocols": "[variables('storageAccountFileShareEnabledProtocols')]"
       }
