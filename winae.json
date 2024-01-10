@@ -38,6 +38,15 @@
     "storageAccountInfrastructureEncryptionEnabled": false,
     "storageAccountIsShareSoftDeleteEnabled": true,
     "storageAccountShareSoftDeleteRetentionDays": 7,
+    "storageAccountFileShareName": "winae-file",
+    "storageAccountFileShareAccessTier": "TransactionOptimized",
+    "storageAccountFileShareShareQuota": 10240,
+    "storageAccountFileShareEnabledProtocols": "SMB",
+    "storageFunctionName": "[concat(replace(parameters('resourcePrefix'),'-', ''), 'sf')]",
+    "storageFunctionSkuName": "Standard_LRS",
+    "storageFunctionSupportsHttpsTrafficOnly": true,
+    "storageFunctionMinimumTlsVersion": "TLS1_2",
+    "storageFunctionDefaultToOAuthAuthentication": true,
     "redisName": "[concat(parameters('resourcePrefix'), '-', 'ctrl')]",
     "redisSkuName": "Basic",
     "redisSkuFamily": "C",
@@ -117,9 +126,9 @@
     },
     {
       "comments": "Storage Account: fileservices",
-      "name": "[concat(variables('storageAccountName'), '/default')]",
-      "type": "Microsoft.Storage/storageAccounts/fileservices",
       "apiVersion": "2022-05-01",
+      "type": "Microsoft.Storage/storageAccounts/fileservices",
+      "name": "[concat(variables('storageAccountName'), '/default')]",
       "properties": {
         "protocolSettings": {
           "smb": {
@@ -136,6 +145,38 @@
       "dependsOn": [
         "[concat('Microsoft.Storage/storageAccounts/', variables('storageAccountName'))]"
       ]
+    },
+    {
+      "comments": "Storage Account: fileshares",
+      "apiVersion": "2021-04-01",
+      "type": "Microsoft.Storage/storageAccounts/fileServices/shares",
+      "location": "[resourceGroup().location]",
+      "name": "[concat(variables('storageAccountName'), '/default/', variables('storageAccountFileShareName'))]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Storage/storageAccounts/fileServices', variables('storageAccountName'), 'default')]",
+        "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]"
+      ],
+      "properties": {
+          "accessTier": "[variables('storageAccountFileShareAccessTier')]",
+          "shareQuota": "[variables('storageAccountFileShareShareQuota')]",
+          "enabledProtocols": "[variables('storageAccountFileShareEnabledProtocols')]"
+      }
+    },
+    {
+      "comments": "Storage Account for Function",
+      "apiVersion": "2022-05-01",
+      "type": "Microsoft.Storage/storageAccounts",
+      "location": "[resourceGroup().location]",
+      "name": "[variables('storageFunctionName')]",
+      "tags": {},
+      "sku": {
+          "name": "[variables('storageFunctionSkuName')]"
+      },
+      "properties": {
+          "supportsHttpsTrafficOnly": "[variables('storageFunctionSupportsHttpsTrafficOnly')]",
+          "minimumTlsVersion": "[variables('storageFunctionMinimumTlsVersion')]",
+          "defaultToOAuthAuthentication": "[variables('storageFunctionDefaultToOAuthAuthentication')]"
+      }
     },
     {
       "comments": "Redis",
@@ -178,7 +219,8 @@
       "type": "Microsoft.Resources/deployments",
       "name": "ASPResourcesDeployment",
       "dependsOn": [
-        "[concat('Microsoft.Storage/storageAccounts/', variables('storageAccountName'))]"
+        "[concat('Microsoft.Storage/storageAccounts/', variables('storageAccountName'))]",
+        "[concat('Microsoft.Storage/storageAccounts/', variables('storageFunctionName'))]"
       ],
       "properties": {
         "mode": "Incremental",
@@ -237,11 +279,11 @@
                     },
                     {
                       "name": "AzureWebJobsStorage",
-                      "value": "[concat('DefaultEndpointsProtocol=https;AccountName=',variables('storageAccountName'),';AccountKey=',listKeys(resourceId('Microsoft.Storage/storageAccounts',variables('storageAccountName')),'2019-06-01').keys[0].value,';EndpointSuffix=','core.windows.net')]"
+                      "value": "[concat('DefaultEndpointsProtocol=https;AccountName=',variables('storageFunctionName'),';AccountKey=',listKeys(resourceId('Microsoft.Storage/storageAccounts',variables('storageFunctionName')),'2019-06-01').keys[0].value,';EndpointSuffix=','core.windows.net')]"
                     },
                     {
                       "name": "WEBSITE_CONTENTAZUREFILECONNECTIONSTRING",
-                      "value": "[concat('DefaultEndpointsProtocol=https;AccountName=',variables('storageAccountName'),';AccountKey=',listKeys(resourceId('Microsoft.Storage/storageAccounts',variables('storageAccountName')),'2019-06-01').keys[0].value,';EndpointSuffix=','core.windows.net')]"
+                      "value": "[concat('DefaultEndpointsProtocol=https;AccountName=',variables('storageFunctionName'),';AccountKey=',listKeys(resourceId('Microsoft.Storage/storageAccounts',variables('storageFunctionName')),'2019-06-01').keys[0].value,';EndpointSuffix=','core.windows.net')]"
                     },
                     {
                       "name": "WEBSITE_CONTENTSHARE",
