@@ -4,7 +4,7 @@ aepack/*.zip
 # # Dockerfile
 Dockerfile.*
 # AppService
-script/*.*.ps1
+script/*cch*.ps1
 # Function App
 # # .funcignore
 azurite/
