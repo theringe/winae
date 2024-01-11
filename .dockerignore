@@ -1,11 +1,25 @@
 # Docker (ACR)
+# # .dockerignore
+# # aepack/
+Dockerfile
+Dockerfile.*
 # AppService
+# # script/
 # Function App
+.funcignore
 azurite/
 node_modules/
+src/
+host.json
 local.*.json
+package*json
+# GitHub
+.gitignore
+docs/
+readme.md
+winae.json
 # Local
-memo.txt
-workspace/
 .vscode/
+workspace/
+memo.txt
 test.*

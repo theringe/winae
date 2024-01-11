@@ -1,16 +1,25 @@
 # Docker (ACR)
-aepack/*.zip
+.dockerignore
+aepack/
+Dockerfile
 Dockerfile.*
 # AppService
-script/winae-wrapper.*.ps1
-script/winae.*.ps1
-script/winae-core.*.ps1
+script/
 # Function App
+# # .funcignore
 azurite/
 node_modules/
+# # src/
+# # host.json
 local.*.json
+# # package*json
+# GitHub
+.gitignore
+docs/
+readme.md
+winae.json
 # Local
-memo.txt
-workspace/
 .vscode/
+workspace/
+memo.txt
 test.*
