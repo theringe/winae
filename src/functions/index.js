@@ -20,6 +20,13 @@ app.http('index', {
         const subdomain = request.url.split('/')[2].split('.')[0];
         let resourcePrefix = DEBUG ? 'winae-nkisd77vswzji-func' : subdomain;
         resourcePrefix = resourcePrefix.substring(0, resourcePrefix.length - 5);
+        // Path detection
+        let PROD = false;
+        let TEMPDIR = '/tmp/';
+        if (process.platform === 'win32') {
+            PROD = true;
+            TEMPDIR = 'C:\\local\\Temp\\';
+        }
         // Internal Variables
         let accessToken = "";
         let subscriptionId = "";
@@ -47,10 +54,11 @@ app.http('index', {
             appSettings.WINAE_REDIS_KEY = redisKey;
             await setAppSettings(accessToken, subscriptionId, resourceGroupName, functionAppName, appSettings);
             // Setup Files
+            // TODO: Read file into variable and save them into C:\local\Temp folder (App Service only)
             const storageAccountName = resourcePrefix.replace('-', '') + 'sa';
             const storageAccountKey = await getStorageAccountKey(accessToken, subscriptionId, resourceGroupName, storageAccountName);
             var fileClient = null;            
-            fs.writeFileSync('sample/tool/winae.ps1', fs.readFileSync('script/winae.ps1', 'utf8')
+            fs.writeFileSync(TEMPDIR + 'winae.ps1', fs.readFileSync(pathSwitcher('script/winae.ps1', PROD), 'utf8')
                 .replace(/\[aadClientId\]/g, process.env["MICROSOFT_PROVIDER_AUTHENTICATION_APPID"])
                 .replace(/\[aadTenantId\]/g, process.env["MICROSOFT_PROVIDER_AUTHENTICATION_TENANTID"])
                 .replace(/\[aadSecretId\]/g, process.env["MICROSOFT_PROVIDER_AUTHENTICATION_SECRET"])
@@ -61,7 +69,7 @@ app.http('index', {
                 .replace(/\[redisHost\]/g, redisName + '.redis.cache.windows.net')
                 .replace(/\[redisPass\]/g, redisKey)
             );
-            fs.writeFileSync('sample/tool/winae-core.ps1', fs.readFileSync('script/winae-core.ps1', 'utf8'));
+            fs.writeFileSync(TEMPDIR + 'winae-core.ps1', fs.readFileSync(pathSwitcher('script/winae-core.ps1', PROD), 'utf8'));
             // Prepare Folders
             const serviceClient = new ShareServiceClient(
                 'https://' + storageAccountName + '.file.core.windows.net',
@@ -86,27 +94,27 @@ app.http('index', {
                 'https://' + storageAccountName + '.file.core.windows.net/winae-file/' + 'media/sample-3m-azapp/55e6df79-d0cd-4b5f-8aad-2c66a57ce281.jpeg',
                 new StorageSharedKeyCredential(storageAccountName, storageAccountKey)
             );
-            await fileClient.uploadFile('sample/media/sample-3m-azapp/55e6df79-d0cd-4b5f-8aad-2c66a57ce281.jpeg');
+            await fileClient.uploadFile(pathSwitcher('sample/media/sample-3m-azapp/55e6df79-d0cd-4b5f-8aad-2c66a57ce281.jpeg', PROD));
             fileClient = new ShareFileClient(
                 'https://' + storageAccountName + '.file.core.windows.net/winae-file/' + 'media/sample-3m-azapp/55e6df79-d0cd-4b5f-8aad-2c66a57ce281.mp3',
                 new StorageSharedKeyCredential(storageAccountName, storageAccountKey)
             );
-            await fileClient.uploadFile('sample/media/sample-3m-azapp/55e6df79-d0cd-4b5f-8aad-2c66a57ce281.mp3');
+            await fileClient.uploadFile(pathSwitcher('sample/media/sample-3m-azapp/55e6df79-d0cd-4b5f-8aad-2c66a57ce281.mp3', PROD));
             fileClient = new ShareFileClient(
                 'https://' + storageAccountName + '.file.core.windows.net/winae-file/' + 'temp/sample-3m-azapp___EP___4536.aepx',
                 new StorageSharedKeyCredential(storageAccountName, storageAccountKey)
             );
-            await fileClient.uploadFile('sample/temp/sample-3m-azapp___EP___4536.aepx');
+            await fileClient.uploadFile(pathSwitcher('sample/temp/sample-3m-azapp___EP___4536.aepx', PROD));
             fileClient = new ShareFileClient(
                 'https://' + storageAccountName + '.file.core.windows.net/winae-file/' + 'tool/winae-core.ps1',
                 new StorageSharedKeyCredential(storageAccountName, storageAccountKey)
             );
-            await fileClient.uploadFile('sample/tool/winae-core.ps1');
+            await fileClient.uploadFile(TEMPDIR + 'winae-core.ps1');
             fileClient = new ShareFileClient(
                 'https://' + storageAccountName + '.file.core.windows.net/winae-file/' + 'tool/winae.ps1',
                 new StorageSharedKeyCredential(storageAccountName, storageAccountKey)
             );
-            await fileClient.uploadFile('sample/tool/winae.ps1');
+            await fileClient.uploadFile(TEMPDIR + 'winae.ps1');
         }
 
         // const client = redis.createClient({
@@ -124,6 +132,10 @@ app.http('index', {
     }
 });
 
+function pathSwitcher(path, win) {
+    if (win) return path.replace(/\//g, '\\');
+    return path;
+}
 function getAccessToken() {
     var options = {
         'method': 'POST',
