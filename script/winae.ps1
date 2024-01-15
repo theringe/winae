@@ -1,15 +1,15 @@
 # Credentials
-$aadClientId = "";
-$aadTenantId = "";
-$aadSecretId = "";
+$aadClientId = "[aadClientId]";
+$aadTenantId = "[aadTenantId]";
+$aadSecretId = "[aadSecretId]";
 # Information from this Application
-$subscriptionId = "";
-$resourceGroup = "";
-$appName = "";
-$aspName = "";
-$redisHost = "";
+$subscriptionId = "[subscriptionId]";
+$resourceGroup = "[resourceGroup]";
+$appName = "[appName]";
+$aspName = "[aspName]";
+$redisHost = "[redisHost]";
 $redisPort = 6379;
-$redisPass = "";
+$redisPass = "[redisPass]";
 $redisPrefix = "azapp:";
 :base while (1) {
     . ($PSScriptRoot + "\winae-core.ps1");

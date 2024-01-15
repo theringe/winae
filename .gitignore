@@ -9,13 +9,15 @@ script/*cch*.ps1
 # # .funcignore
 azurite/
 node_modules/
+sample/tool/*.ps1
 # # src/
 # # host.json
 local.*.json
 # # package*json
 # GitHub
-# # .gitignore
+.github/
 # # docs/
+# # .gitignore
 # # readme.md
 # # winae.json
 # Local

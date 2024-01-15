@@ -9,13 +9,15 @@ Dockerfile.*
 .funcignore
 azurite/
 node_modules/
+sample/
 src/
 host.json
 local.*.json
 package*json
 # GitHub
-.gitignore
+.github/
 docs/
+.gitignore
 readme.md
 winae.json
 # Local

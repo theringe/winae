@@ -1,10 +1,12 @@
 // Libraries
 const { app } = require('@azure/functions');
+const { ShareServiceClient, ShareFileClient, StorageSharedKeyCredential } = require("@azure/storage-file-share");
 const req = require('request');
 const redis = require('redis');
+const fs = require('fs');
 
 // Settings
-const DEBUG = false;
+const DEBUG = true;
 const APPID = process.env["MICROSOFT_PROVIDER_AUTHENTICATION_APPID"];
 const TENANTID = process.env["MICROSOFT_PROVIDER_AUTHENTICATION_TENANTID"];
 const SECRET = process.env["MICROSOFT_PROVIDER_AUTHENTICATION_SECRET"];
@@ -18,36 +20,104 @@ app.http('index', {
         const subdomain = request.url.split('/')[2].split('.')[0];
         let resourcePrefix = DEBUG ? 'winae-nkisd77vswzji-func' : subdomain;
         resourcePrefix = resourcePrefix.substring(0, resourcePrefix.length - 5);
-        // Get information
-        const accessToken = await getAccessToken();
-        const subscriptionId = await getSubscriptionId(accessToken);
-        const resourceGroupName = await getResourceGroupName(accessToken, subscriptionId);
-
-        // Detect app setting WINAE_REDIS_NAME exist or not
-        let redisHost = process.env["WINAE_REDIS_NAME"];
-        if (!redisHost) {
+        // Internal Variables
+        let accessToken = "";
+        let subscriptionId = "";
+        let resourceGroupName = "";
+        let appSettings = {};
+        // Redis And FileShares
+        if (!process.env["WINAE_REDIS_NAME"]) {
+            // Ger Azure Resources
+            accessToken = await getAccessToken();
+            subscriptionId = await getSubscriptionId(accessToken);
+            resourceGroupName = await getResourceGroupName(accessToken, subscriptionId);
+            // Get Redis information
             redisName = resourcePrefix + '-ctrl';
             redisPort = 6379;
             redisKey = await getRedisKey(accessToken, subscriptionId, resourceGroupName, redisName);
-            context.log("redisKey: " + redisKey);
-            const client = redis.createClient({
-                url: 'redis://default:' + redisKey + '@' + redisName + '.redis.cache.windows.net:' + redisPort
-            });
-            client.on('error', err => console.log('Redis Client Error', err));
-            await client.connect();
-            await client.set('kk', 'vv');
-            const kk = await client.get('kk');
-            context.log("kk: " + kk);
-            await client.disconnect();
-            //process.env["WINAE_REDIS_NAME"] = redisName; // not actually change local.setting.json
+            // Set App Settings to environment variables
+            process.env["WINAE_REDIS_NAME"] = redisName;
+            process.env["WINAE_REDIS_PORT"] = redisPort;
+            process.env["WINAE_REDIS_KEY"] = redisKey;
+            // Set App Settings to App Service
+            functionAppName = resourcePrefix + '-func';
+            appSettings = await getAppSettings(accessToken, subscriptionId, resourceGroupName, functionAppName);
+            appSettings.WINAE_REDIS_NAME = redisName;
+            appSettings.WINAE_REDIS_PORT = redisPort;
+            appSettings.WINAE_REDIS_KEY = redisKey;
+            await setAppSettings(accessToken, subscriptionId, resourceGroupName, functionAppName, appSettings);
+            // Setup Files
+            const storageAccountName = resourcePrefix.replace('-', '') + 'sa';
+            const storageAccountKey = await getStorageAccountKey(accessToken, subscriptionId, resourceGroupName, storageAccountName);
+            var fileClient = null;            
+            fs.writeFileSync('sample/tool/winae.ps1', fs.readFileSync('script/winae.ps1', 'utf8')
+                .replace(/\[aadClientId\]/g, process.env["MICROSOFT_PROVIDER_AUTHENTICATION_APPID"])
+                .replace(/\[aadTenantId\]/g, process.env["MICROSOFT_PROVIDER_AUTHENTICATION_TENANTID"])
+                .replace(/\[aadSecretId\]/g, process.env["MICROSOFT_PROVIDER_AUTHENTICATION_SECRET"])
+                .replace(/\[subscriptionId\]/g, subscriptionId)
+                .replace(/\[resourceGroup\]/g, resourceGroupName)
+                .replace(/\[appName\]/g, resourcePrefix + '-app')
+                .replace(/\[aspName\]/g, resourcePrefix + '-env')
+                .replace(/\[redisHost\]/g, redisName + '.redis.cache.windows.net')
+                .replace(/\[redisPass\]/g, redisKey)
+            );
+            fs.writeFileSync('sample/tool/winae-core.ps1', fs.readFileSync('script/winae-core.ps1', 'utf8'));
+            // Prepare Folders
+            const serviceClient = new ShareServiceClient(
+                'https://' + storageAccountName + '.file.core.windows.net',
+                new StorageSharedKeyCredential(storageAccountName, storageAccountKey)
+            );
+            const shareClient = serviceClient.getShareClient('winae-file');
+            var directoryClient = null;
+            directoryClient = shareClient.getDirectoryClient('media');
+            await directoryClient.create();
+            directoryClient = shareClient.getDirectoryClient('media/sample-3m-azapp');
+            await directoryClient.create();
+            directoryClient = shareClient.getDirectoryClient('output');
+            await directoryClient.create();
+            directoryClient = shareClient.getDirectoryClient('project');
+            await directoryClient.create();
+            directoryClient = shareClient.getDirectoryClient('temp');
+            await directoryClient.create();
+            directoryClient = shareClient.getDirectoryClient('tool');
+            await directoryClient.create();
+            // Upload Files
+            fileClient = new ShareFileClient(
+                'https://' + storageAccountName + '.file.core.windows.net/winae-file/' + 'media/sample-3m-azapp/55e6df79-d0cd-4b5f-8aad-2c66a57ce281.jpeg',
+                new StorageSharedKeyCredential(storageAccountName, storageAccountKey)
+            );
+            await fileClient.uploadFile('sample/media/sample-3m-azapp/55e6df79-d0cd-4b5f-8aad-2c66a57ce281.jpeg');
+            fileClient = new ShareFileClient(
+                'https://' + storageAccountName + '.file.core.windows.net/winae-file/' + 'media/sample-3m-azapp/55e6df79-d0cd-4b5f-8aad-2c66a57ce281.mp3',
+                new StorageSharedKeyCredential(storageAccountName, storageAccountKey)
+            );
+            await fileClient.uploadFile('sample/media/sample-3m-azapp/55e6df79-d0cd-4b5f-8aad-2c66a57ce281.mp3');
+            fileClient = new ShareFileClient(
+                'https://' + storageAccountName + '.file.core.windows.net/winae-file/' + 'temp/sample-3m-azapp___EP___4536.aepx',
+                new StorageSharedKeyCredential(storageAccountName, storageAccountKey)
+            );
+            await fileClient.uploadFile('sample/temp/sample-3m-azapp___EP___4536.aepx');
+            fileClient = new ShareFileClient(
+                'https://' + storageAccountName + '.file.core.windows.net/winae-file/' + 'tool/winae-core.ps1',
+                new StorageSharedKeyCredential(storageAccountName, storageAccountKey)
+            );
+            await fileClient.uploadFile('sample/tool/winae-core.ps1');
+            fileClient = new ShareFileClient(
+                'https://' + storageAccountName + '.file.core.windows.net/winae-file/' + 'tool/winae.ps1',
+                new StorageSharedKeyCredential(storageAccountName, storageAccountKey)
+            );
+            await fileClient.uploadFile('sample/tool/winae.ps1');
         }
 
-
-        // context.log("resourcePrefix: " + resourcePrefix);
-        // context.log("accessToken: " + accessToken);
-        // context.log("subscriptionId: " + subscriptionId);
-        // context.log("resourceGroupName: " + resourceGroupName);
-
+        // const client = redis.createClient({
+        //     url: 'redis://default:' + redisKey + '@' + redisName + '.redis.cache.windows.net:' + redisPort
+        // });
+        // client.on('error', err => console.log('Redis Client Error', err));
+        // await client.connect();
+        // await client.set('kk', 'vv');
+        // const kk = await client.get('kk');
+        // context.log("kk: " + kk);
+        // await client.disconnect();
 
 
         return { body: subscriptionId };
@@ -118,6 +188,55 @@ function getRedisKey(accessToken, subscriptionId, resourceGroupName, redisName) 
         req(options, function (error, response) {
             if (error) reject(new Error(error));
             resolve(JSON.parse(response.body).primaryKey);
+        });
+    });
+}
+function getAppSettings(accessToken, subscriptionId, resourceGroupName, functionAppName) {
+    var options = {
+        'method': 'POST',
+        'url': 'https://management.azure.com/subscriptions/' + subscriptionId + '/resourceGroups/' + resourceGroupName + '/providers/Microsoft.Web/sites/' + functionAppName + '/config/appsettings/list?api-version=2022-03-01',
+        'headers': {
+            'Authorization': 'Bearer ' + accessToken,
+            'Content-type': 'application/json'
+        }
+    };
+    return new Promise(function (resolve, reject) {
+        req(options, function (error, response) {
+            if (error) reject(new Error(error));
+            resolve(JSON.parse(response.body).properties);
+        });
+    });
+}
+function setAppSettings(accessToken, subscriptionId, resourceGroupName, functionAppName, appSettings) {
+    var options = {
+        'method': 'PUT',
+        'url': 'https://management.azure.com/subscriptions/' + subscriptionId + '/resourceGroups/' + resourceGroupName + '/providers/Microsoft.Web/sites/' + functionAppName + '/config/appsettings?api-version=2022-03-01',
+        'headers': {
+            'Authorization': 'Bearer ' + accessToken,
+            'Content-type': 'application/json'
+        },
+        body: '{"properties": ' + JSON.stringify(appSettings) + '}'
+    };
+    return new Promise(function (resolve, reject) {
+        req(options, function (error, response) {
+            if (error) reject(new Error(error));
+            resolve(JSON.parse(response.body).properties);
+        });
+    });
+}
+function getStorageAccountKey(accessToken, subscriptionId, resourceGroupName, storageAccountName) {
+    var options = {
+        'method': 'POST',
+        'url': 'https://management.azure.com/subscriptions/' + subscriptionId + '/resourceGroups/' + resourceGroupName + '/providers/Microsoft.Storage/storageAccounts/' + storageAccountName + '/listKeys?api-version=2023-01-01',
+        'headers': {
+            'Authorization': 'Bearer ' + accessToken,
+            'Content-type': 'application/json'
+        }
+    };
+    return new Promise(function (resolve, reject) {
+        req(options, function (error, response) {
+            if (error) reject(new Error(error));
+            resolve(JSON.parse(response.body).keys[0].value);
         });
     });
 }
