@@ -83,13 +83,6 @@
       "type": "Microsoft.Storage/storageAccounts/fileservices",
       "name": "[concat(variables('storageAccountName'), '/default')]",
       "properties": {
-        "protocolSettings": {
-          "smb": {
-            "multichannel": {
-              "enabled": true
-            }
-          }
-        },
         "shareDeleteRetentionPolicy": {
           "enabled": "[variables('storageAccountIsShareSoftDeleteEnabled')]",
           "days": "[variables('storageAccountShareSoftDeleteRetentionDays')]"
