@@ -4,7 +4,7 @@ const req = require('request');
 const redis = require('redis');
 
 // Settings
-const DEBUG = true;
+const DEBUG = false;
 const APPID = process.env["MICROSOFT_PROVIDER_AUTHENTICATION_APPID"];
 const TENANTID = process.env["MICROSOFT_PROVIDER_AUTHENTICATION_TENANTID"];
 const SECRET = process.env["MICROSOFT_PROVIDER_AUTHENTICATION_SECRET"];
@@ -16,7 +16,7 @@ app.http('index', {
     handler: async (request, context) => {
         // Get resourcePrefix
         const subdomain = request.url.split('/')[2].split('.')[0];
-        let resourcePrefix = DEBUG ? 'winae-hdcsicnuktmyo-func' : subdomain;
+        let resourcePrefix = DEBUG ? 'winae-nkisd77vswzji-func' : subdomain;
         resourcePrefix = resourcePrefix.substring(0, resourcePrefix.length - 5);
         // Get information
         const accessToken = await getAccessToken();
@@ -35,9 +35,9 @@ app.http('index', {
             });
             client.on('error', err => console.log('Redis Client Error', err));
             await client.connect();
-            // await client.set('kk', 'vv');
-            // const kk = await client.get('kk');
-            // context.log("kk: " + kk);
+            await client.set('kk', 'vv');
+            const kk = await client.get('kk');
+            context.log("kk: " + kk);
             await client.disconnect();
             //process.env["WINAE_REDIS_NAME"] = redisName; // not actually change local.setting.json
         }
