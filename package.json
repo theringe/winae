@@ -7,8 +7,9 @@
     "test": "echo \"No tests yet...\""
   },
   "dependencies": {
-    "@azure/functions": "^4.0.0"
+    "@azure/functions": "^4.0.0",
+    "redis": "^4.6.12",
+    "request": "^2.88.2"
   },
-  "devDependencies": {},
   "main": "src/functions/*.js"
 }
