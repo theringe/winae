@@ -10,7 +10,6 @@ const APPID = process.env["MICROSOFT_PROVIDER_AUTHENTICATION_APPID"];
 const TENANTID = process.env["MICROSOFT_PROVIDER_AUTHENTICATION_TENANTID"];
 const SECRET = process.env["MICROSOFT_PROVIDER_AUTHENTICATION_SECRET"];
 
-
 app.http('index', {
     methods: ['GET'],
     authLevel: 'function',
@@ -110,6 +109,57 @@ app.http('index', {
             );
             await fileClient.uploadFile('sample/tool/winae.ps1');
         }
+        // Image
+        var finalRepoName = "";
+        var finalTagName = "";
+        // Ger Azure Resources
+        accessToken = await getAccessToken();
+        subscriptionId = await getSubscriptionId(accessToken);
+        resourceGroupName = await getResourceGroupName(accessToken, subscriptionId);
+        // Get latest image from ACR
+        let registryToken = "";
+        const registryName = resourcePrefix.replace('-', '') + 'cr';
+        const registryKey = await getRegistryKey(accessToken, subscriptionId, resourceGroupName, registryName);
+        registryToken = await getRegistryToken(registryName, registryKey, registryName, 'registry:catalog:*');
+        const repoName = await getRepoFromRegistry(registryToken, registryName);
+        if (repoName.length > 0) {
+            finalRepoName = repoName[0];
+            registryToken = await getRegistryToken(registryName, registryKey, registryName, 'repository:' + finalRepoName + ':pull');
+            const tagName = await getTagFromRepo(registryToken, registryName, finalRepoName);
+            if (tagName.length > 0) {
+                finalTagName = tagName[0].name;
+            }
+        }
+        let render = false;
+        let imageupd = false;
+        if (process.env["WINAE_IMAGE"]) {
+            render = true;
+            // finalRepoName and finalTagName must not empty
+            if (process.env["WINAE_IMAGE"] != registryName + '.azurecr.io/' + finalRepoName + ':' + finalTagName) imageupd = true;
+        } else {
+            if (finalRepoName != "" && finalTagName != "") {
+                render = true;
+                imageupd = true;
+            }
+        }
+        if (imageupd) {
+            process.env["WINAE_IMAGE"] = registryName + '.azurecr.io/' + finalRepoName + ':' + finalTagName;
+            functionAppName = resourcePrefix + '-func';
+            appSettings = await getAppSettings(accessToken, subscriptionId, resourceGroupName, functionAppName);
+            appSettings.WINAE_IMAGE = registryName + '.azurecr.io/' + finalRepoName + ':' + finalTagName;
+            await setAppSettings(accessToken, subscriptionId, resourceGroupName, functionAppName, appSettings);
+        }
+        if (render) {
+            var res = fs.readFileSync('src/templates/readme.html', 'utf8')
+                .replace(/\[IMAGE_STATUS\]/g, "ready")
+            ;
+            return { body: res };
+        } else {
+            var res = fs.readFileSync('src/templates/readme.html', 'utf8')
+                .replace(/\[IMAGE_STATUS\]/g, "not ready")
+            ;
+            return { body: res };
+        }
 
         // const client = redis.createClient({
         //     url: 'redis://default:' + redisKey + '@' + redisName + '.redis.cache.windows.net:' + redisPort
@@ -120,9 +170,6 @@ app.http('index', {
         // const kk = await client.get('kk');
         // context.log("kk: " + kk);
         // await client.disconnect();
-
-
-        return { body: subscriptionId };
     }
 });
 
@@ -239,6 +286,68 @@ function getStorageAccountKey(accessToken, subscriptionId, resourceGroupName, st
         req(options, function (error, response) {
             if (error) reject(new Error(error));
             resolve(JSON.parse(response.body).keys[0].value);
+        });
+    });
+}
+function getRegistryKey(accessToken, subscriptionId, resourceGroupName, registryName) {
+    var options = {
+        'method': 'POST',
+        'url': 'https://management.azure.com/subscriptions/' + subscriptionId + '/resourceGroups/' + resourceGroupName + '/providers/Microsoft.ContainerRegistry/registries/' + registryName + '/listCredentials?api-version=2023-01-01-preview',
+        'headers': {
+            'Authorization': 'Bearer ' + accessToken,
+            'Content-type': 'application/json'
+        }
+    };
+    return new Promise(function (resolve, reject) {
+        req(options, function (error, response) {
+            if (error) reject(new Error(error));
+            resolve(JSON.parse(response.body).passwords[0].value);
+        });
+    });
+}
+function getRegistryToken(registryUser, registryPass, registryName, registryScope) {
+    const auth = Buffer.from(registryUser + ':' + registryPass).toString('base64');
+    var options = {
+        'method': 'GET',
+        'url': 'https://' + registryName + '.azurecr.io/oauth2/token?service=' + registryName + '.azurecr.io&scope=' + encodeURIComponent(registryScope),
+        'headers': {
+            'Authorization': 'Basic ' + auth
+        }
+    };
+    return new Promise(function (resolve, reject) {
+        req(options, function (error, response) {
+            if (error) reject(new Error(error));
+            resolve(JSON.parse(response.body).access_token);
+        });
+    });
+}
+function getRepoFromRegistry(registryToken, registryName) {
+    var options = {
+        'method': 'GET',
+        'url': 'https://' + registryName + '.azurecr.io/acr/v1/_catalog',
+        'headers': {
+            'Authorization': 'Bearer ' + registryToken
+        }
+    };
+    return new Promise(function (resolve, reject) {
+        req(options, function (error, response) {
+            if (error) reject(new Error(error));
+            resolve(JSON.parse(response.body).repositories || []);
+        });
+    });
+}
+function getTagFromRepo(registryToken, registryName, repoName) {
+    var options = {
+        'method': 'GET',
+        'url': 'https://' + registryName + '.azurecr.io/acr/v1/' + repoName + '/_tags?orderby=timedesc&n=1',
+        'headers': {
+            'Authorization': 'Bearer ' + registryToken
+        }
+    };
+    return new Promise(function (resolve, reject) {
+        req(options, function (error, response) {
+            if (error) reject(new Error(error));
+            resolve(JSON.parse(response.body).tags || []);
         });
     });
 }

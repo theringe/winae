@@ -40,6 +40,7 @@
     "registrySkuName": "Standard",
     "registryPublicNetworkAccess": "Enabled",
     "registryZoneRedundancy": "disabled",
+    "registryAdminUserEnabled": true,
     "planName": "[concat(parameters('resourcePrefix'), '-', 'plan')]",
     "planKind": "linux",
     "planSkuTier": "Dynamic",
@@ -141,7 +142,8 @@
       "tags": {},
       "properties": {
         "publicNetworkAccess": "[variables('registryPublicNetworkAccess')]",
-        "zoneRedundancy": "[variables('registryZoneRedundancy')]"
+        "zoneRedundancy": "[variables('registryZoneRedundancy')]",
+        "adminUserEnabled": "[variables('registryAdminUserEnabled')]"
       }
     },
     {
