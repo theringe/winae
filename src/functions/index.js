@@ -6,19 +6,20 @@ const redis = require('redis');
 const fs = require('fs');
 
 // Settings
-const DEBUG = true;
 const APPID = process.env["MICROSOFT_PROVIDER_AUTHENTICATION_APPID"];
 const TENANTID = process.env["MICROSOFT_PROVIDER_AUTHENTICATION_TENANTID"];
 const SECRET = process.env["MICROSOFT_PROVIDER_AUTHENTICATION_SECRET"];
-//const name = request.query.get('name') || await request.text() || 'default value';
+
 
 app.http('index', {
     methods: ['GET'],
     authLevel: 'function',
     handler: async (request, context) => {
+        // Debug App
+        const name = request.query.get('name') || await request.text() || 'default value';
         // Get resourcePrefix
         const subdomain = request.url.split('/')[2].split('.')[0];
-        let resourcePrefix = DEBUG ? 'winae-nkisd77vswzji-func' : subdomain;
+        let resourcePrefix = (subdomain == 127) ? name : subdomain;
         resourcePrefix = resourcePrefix.substring(0, resourcePrefix.length - 5);
         // Internal Variables
         let accessToken = "";
