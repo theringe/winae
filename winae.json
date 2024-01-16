@@ -41,19 +41,21 @@
     "registryPublicNetworkAccess": "Enabled",
     "registryZoneRedundancy": "disabled",
     "planName": "[concat(parameters('resourcePrefix'), '-', 'plan')]",
+    "planKind": "linux",
     "planSkuTier": "Dynamic",
     "planSkuName": "Y1",
     "planWorkerSize": "0",
     "planWorkerSizeId": "0",
     "planNumberOfWorkers": "1",
+    "planReserved": true,
     "functionName": "[concat(parameters('resourcePrefix'), '-', 'func')]",
+    "functionKind": "functionapp,linux",
     "functionSiteConfigAppSettingsFUNCTIONS_EXTENSION_VERSION": "~4",
     "functionSiteConfigAppSettingsFUNCTIONS_WORKER_RUNTIME": "node",
-    "functionSiteConfigAppSettingsWEBSITE_NODE_DEFAULT_VERSION": "~18",
     "functionSiteConfigAppSettingsWEBSITE_CONTENTSHARE": "winae-func",
-    "functionSiteConfigUse32BitWorkerProcess": true,
+    "functionSiteConfigUse32BitWorkerProcess": false,
     "functionSiteConfigFtpsState": "FtpsOnly",
-    "functionSiteConfigNetFrameworkVersion": "v6.0",
+    "functionSiteConfigLinuxFxVersion": "Node|18",
     "functionClientAffinityEnabled": false,
     "functionPublicNetworkAccess": "Enabled",
     "functionHttpsOnly": true,
@@ -164,7 +166,7 @@
               "type": "Microsoft.Web/serverfarms",
               "location": "[resourceGroup().location]",
               "name": "[variables('planName')]",
-              "kind": "",
+              "kind": "[variables('planKind')]",
               "sku": {
                 "Tier": "[variables('planSkuTier')]",
                 "Name": "[variables('planSkuName')]"
@@ -175,7 +177,8 @@
                 "name": "[variables('planName')]",
                 "workerSize": "[variables('planWorkerSize')]",
                 "workerSizeId": "[variables('planWorkerSizeId')]",
-                "numberOfWorkers": "[variables('planNumberOfWorkers')]"
+                "numberOfWorkers": "[variables('planNumberOfWorkers')]",
+                "reserved": "[variables('planReserved')]"
               }
             },
             {
@@ -184,7 +187,7 @@
               "type": "Microsoft.Web/sites",
               "location": "[resourceGroup().location]",
               "name": "[variables('functionName')]",
-              "kind": "functionapp",
+              "kind": "[variables('functionKind')]",
               "tags": {},
               "dependsOn": [
                 "[concat('Microsoft.Web/serverfarms/', variables('planName'))]"
@@ -200,10 +203,6 @@
                     {
                       "name": "FUNCTIONS_WORKER_RUNTIME",
                       "value": "[variables('functionSiteConfigAppSettingsFUNCTIONS_WORKER_RUNTIME')]"
-                    },
-                    {
-                      "name": "WEBSITE_NODE_DEFAULT_VERSION",
-                      "value": "[variables('functionSiteConfigAppSettingsWEBSITE_NODE_DEFAULT_VERSION')]"
                     },
                     {
                       "name": "AzureWebJobsStorage",
@@ -223,7 +222,7 @@
                   },
                   "use32BitWorkerProcess": "[variables('functionSiteConfigUse32BitWorkerProcess')]",
                   "ftpsState": "[variables('functionSiteConfigFtpsState')]",
-                  "netFrameworkVersion": "[variables('functionSiteConfigNetFrameworkVersion')]"
+                  "linuxFxVersion": "[variables('functionSiteConfigLinuxFxVersion')]"
                 },
                 "clientAffinityEnabled": "[variables('functionClientAffinityEnabled')]",
                 "virtualNetworkSubnetId": null,
