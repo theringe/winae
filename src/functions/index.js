@@ -149,18 +149,24 @@ app.http('index', {
             appSettings.WINAE_IMAGE = registryName + '.azurecr.io/' + finalRepoName + ':' + finalTagName;
             await setAppSettings(accessToken, subscriptionId, resourceGroupName, functionAppName, appSettings);
         }
+        let resBody = "";
         if (render) {
-            var res = fs.readFileSync('src/templates/readme.html', 'utf8')
+            resBody = fs.readFileSync('src/templates/readme.html', 'utf8')
                 .replace(/\[IMAGE_STATUS\]/g, "ready")
             ;
-            return { body: res };
         } else {
-            var res = fs.readFileSync('src/templates/readme.html', 'utf8')
+            resBody = fs.readFileSync('src/templates/readme.html', 'utf8')
                 .replace(/\[IMAGE_STATUS\]/g, "not ready")
             ;
-            return { body: res };
         }
-
+        return {
+            statusCode: 200,
+            isBase64Encoded: false,
+            headers: {
+                'Content-Type': 'text/html; charset=utf-8'
+            },
+            body: resBody
+        }
         // const client = redis.createClient({
         //     url: 'redis://default:' + redisKey + '@' + redisName + '.redis.cache.windows.net:' + redisPort
         // });
