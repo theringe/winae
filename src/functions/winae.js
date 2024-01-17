@@ -3,7 +3,7 @@ const redis = require('redis');
 
 app.http('winae', {
     methods: ['GET', 'POST'],
-    authLevel: 'anonymmous',
+    authLevel: 'anonymous',
     handler: async (request, context) => {
         if (request.method === 'GET') {
             return {

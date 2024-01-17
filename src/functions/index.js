@@ -11,7 +11,7 @@ const SECRET = process.env["MICROSOFT_PROVIDER_AUTHENTICATION_SECRET"];
 
 app.http('index', {
     methods: ['GET'],
-    authLevel: 'anonymmous',
+    authLevel: 'anonymous',
     handler: async (request, context) => {
         // Debug App
         const name = request.query.get('name') || await request.text() || 'default value';
