@@ -2,19 +2,16 @@
 const { app } = require('@azure/functions');
 const { ShareServiceClient, ShareFileClient, StorageSharedKeyCredential } = require("@azure/storage-file-share");
 const req = require('request');
-const redis = require('redis');
 const fs = require('fs');
-const crypto = require('crypto');
 
 // Settings
 const APPID = process.env["MICROSOFT_PROVIDER_AUTHENTICATION_APPID"];
 const TENANTID = process.env["MICROSOFT_PROVIDER_AUTHENTICATION_TENANTID"];
 const SECRET = process.env["MICROSOFT_PROVIDER_AUTHENTICATION_SECRET"];
-const storageAccountEnc = "R2W8WuO2iJvtxecwAjED1ItRUtr54jzQw8YRN+pzL9A=";
 
 app.http('index', {
     methods: ['GET'],
-    authLevel: 'function',
+    authLevel: 'anonymmous',
     handler: async (request, context) => {
         // Debug App
         const name = request.query.get('name') || await request.text() || 'default value';
@@ -178,15 +175,6 @@ app.http('index', {
             body: resBody,
             cookies: resCookie
         }
-        // const client = redis.createClient({
-        //     url: 'redis://default:' + redisKey + '@' + redisName + '.redis.cache.windows.net:' + redisPort
-        // });
-        // client.on('error', err => console.log('Redis Client Error', err));
-        // await client.connect();
-        // await client.set('kk', 'vv');
-        // const kk = await client.get('kk');
-        // context.log("kk: " + kk);
-        // await client.disconnect();
     }
 });
 
