@@ -50,7 +50,7 @@ app.http('index', {
             // TODO: Read file into variable and save them into C:\local\Temp folder (App Service only)
             const storageAccountName = resourcePrefix.replace('-', '') + 'sa';
             const storageAccountKey = await getStorageAccountKey(accessToken, subscriptionId, resourceGroupName, storageAccountName);
-            var fileClient = null;            
+            var fileClient = null;
             fs.writeFileSync('sample/tool/winae.ps1', fs.readFileSync('script/winae.ps1', 'utf8')
                 .replace(/\[aadClientId\]/g, process.env["MICROSOFT_PROVIDER_AUTHENTICATION_APPID"])
                 .replace(/\[aadTenantId\]/g, process.env["MICROSOFT_PROVIDER_AUTHENTICATION_TENANTID"])
@@ -153,11 +153,17 @@ app.http('index', {
         if (render) {
             resBody = fs.readFileSync('src/templates/readme.html', 'utf8')
                 .replace(/\[IMAGE_STATUS\]/g, "ready")
-            ;
+                .replace(/\[ACR_NAME\]/g, registryName)
+                .replace(/\[ACR_KEY\]/g, registryKey)
+                .replace(/\[TAG_NAME\]/g, getTodayTag())
+                ;
         } else {
             resBody = fs.readFileSync('src/templates/readme.html', 'utf8')
                 .replace(/\[IMAGE_STATUS\]/g, "not ready")
-            ;
+                .replace(/\[ACR_NAME\]/g, registryName)
+                .replace(/\[ACR_KEY\]/g, registryKey)
+                .replace(/\[TAG_NAME\]/g, getTodayTag())
+                ;
         }
         return {
             statusCode: 200,
@@ -356,4 +362,12 @@ function getTagFromRepo(registryToken, registryName, repoName) {
             resolve(JSON.parse(response.body).tags || []);
         });
     });
+}
+function getTodayTag() {
+    const date = new Date();
+    const year = date.getFullYear();
+    const month = ('0' + (date.getMonth() + 1)).substr(-2);
+    const day = ('0' + date.getDate()).substr(-2);
+    const dateStr = [year, month, day].join('');
+    return dateStr;
 }

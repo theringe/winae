@@ -26,6 +26,18 @@
     <!-- LIBRARY -->
     <link rel="stylesheet" href="https://cdn.usebootstrap.com/bootstrap/4.3.1/css/bootstrap.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+    <script language="javascript" type="text/javascript"
+        src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/6.65.7/codemirror.min.js"></script>
+    <script language="javascript" type="text/javascript"
+        src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/6.65.7/mode/dockerfile/dockerfile.min.js"></script>
+    <script language="javascript" type="text/javascript"
+        src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/6.65.7/mode/powershell/powershell.min.js"></script>
+    <link rel="stylesheet" type="text/css"
+        href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/6.65.7/codemirror.min.css">
+    </link>
+    <link rel="stylesheet" type="text/css"
+        href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/6.65.7/theme/abbott.min.css">
+    </link>
     <style>
         body {
             background-color: #faf8ef;
@@ -107,7 +119,10 @@
                         <td>4-01</td>
                         <td>Use the following command to download the Winae project and after downloading, switch to the
                             project
-                            folder:<br><code>git clone https://github.com/theringe/winae.git</code><br><code>cd winae</code>
+                            folder:<br>
+                            <textarea id="code_4_01" name="code_4_01">
+git clone https://github.com/theringe/winae.git
+cd winae</textarea>
                         </td>
                     </tr>
                     <tr>
@@ -115,13 +130,77 @@
                         <td><img src="https://raw.githubusercontent.com/theringe/winae/master/docs/images/4-01.png"
                                 style="max-width: 100%;"></td>
                     </tr>
+
                     <tr>
-                        <td></td>
-                        <td></td>
+                        <td>4-02</td>
+                        <td>Edit the Dockerfile using a text editor:<br>
+                            <ul>
+                                <li>Replace the filenames with the file downloaded in step 3</li>
+                                <li>Modify the software installation path to match the actual path (usually Adobe After
+                                    Effects 20xx). Please note, if there are any spaces in the path, add the ` symbol
+                                    before the space as shown in the example</li>
+                                <li>If you are an advanced user and know how to install plugins, refer to the blog for
+                                    the description and prepare the relevant files. Otherwise, please delete them
+                                    directly</li>
+                            </ul>
+                        </td>
+
                     </tr>
                     <tr>
                         <td></td>
+                        <td><img src="https://raw.githubusercontent.com/theringe/winae/master/docs/images/4-02.png"
+                                style="max-width: 100%;"></td>
+                    </tr>
+
+
+                    <tr>
+                        <td>4-03</td>
+                        <td>Put the software downloaded in step 3 into the "aepack" folder</td>
+                    </tr>
+                    <tr>
                         <td></td>
+                        <td><img src="https://raw.githubusercontent.com/theringe/winae/master/docs/images/4-03.png"
+                                style="max-width: 100%;"></td>
+                    </tr>
+
+
+                    <tr>
+                        <td>4-04</td>
+                        <td>Go back to the terminal and execute the following command to build the Windows container
+                            image. This step will take approximately 30-40 minutes (Note that the following command
+                            contains your specific resource information. Please do not share it with others)<br>
+                            <textarea id="code_4_04" name="code_4_04">
+docker build -t [ACR_NAME].azurecr.io/winae:[TAG_NAME] . --no-cache</textarea>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td></td>
+                        <td><img src="https://raw.githubusercontent.com/theringe/winae/master/docs/images/4-04.png"
+                                style="max-width: 100%;"></td>
+                    </tr>
+
+
+                    <tr>
+                        <td>4-05</td>
+                        <td>Continue operating in the terminal and execute the following command to upload the image to
+                            your container registry resource. This step will take approximately 30-40 minutes (Note that
+                            the following command contains your specific resource information. Please do not share it
+                            with others)<br>
+                            <textarea id="code_4_05" name="code_4_05">
+docker login --username [ACR_NAME] --password [ACR_KEY] [ACR_NAME].azurecr.io
+docker push [ACR_NAME].azurecr.io/winae:[TAG_NAME]</textarea>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td></td>
+                        <td><img src="https://raw.githubusercontent.com/theringe/winae/master/docs/images/4-05.png"
+                                style="max-width: 100%;"></td>
+                    </tr>
+
+                    <tr>
+                        <td>4-06</td>
+                        <td>The installation process has been completed. Please reload this page to begin the operation.
+                            Please refer to the "how to use" section on the GitHub webpage</td>
                     </tr>
                 </tbody>
             </table>
@@ -133,6 +212,24 @@
         </div>
     </div>
     <script>
+        CodeMirror.fromTextArea(document.getElementById('code_4_01'), {
+            lineNumbers: true,
+            matchBrackets: true,
+            mode: 'text/x-powershell',
+            theme: 'abbott',
+        });
+        CodeMirror.fromTextArea(document.getElementById('code_4_04'), {
+            lineNumbers: true,
+            matchBrackets: true,
+            mode: 'text/x-powershell',
+            theme: 'abbott',
+        });
+        CodeMirror.fromTextArea(document.getElementById('code_4_05'), {
+            lineNumbers: true,
+            matchBrackets: true,
+            mode: 'text/x-powershell',
+            theme: 'abbott',
+        });
     </script>
 
 </body>
