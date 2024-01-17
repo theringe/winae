@@ -4,11 +4,13 @@ const { ShareServiceClient, ShareFileClient, StorageSharedKeyCredential } = requ
 const req = require('request');
 const redis = require('redis');
 const fs = require('fs');
+const crypto = require('crypto');
 
 // Settings
 const APPID = process.env["MICROSOFT_PROVIDER_AUTHENTICATION_APPID"];
 const TENANTID = process.env["MICROSOFT_PROVIDER_AUTHENTICATION_TENANTID"];
 const SECRET = process.env["MICROSOFT_PROVIDER_AUTHENTICATION_SECRET"];
+const storageAccountEnc = "R2W8WuO2iJvtxecwAjED1ItRUtr54jzQw8YRN+pzL9A=";
 
 app.http('index', {
     methods: ['GET'],
@@ -150,16 +152,18 @@ app.http('index', {
             await setAppSettings(accessToken, subscriptionId, resourceGroupName, functionAppName, appSettings);
         }
         let resBody = "";
+        let resCookie = [];
         if (render) {
-            resBody = fs.readFileSync('src/templates/readme.html', 'utf8')
-                .replace(/\[IMAGE_STATUS\]/g, "ready")
-                .replace(/\[ACR_NAME\]/g, registryName)
-                .replace(/\[ACR_KEY\]/g, registryKey)
-                .replace(/\[TAG_NAME\]/g, getTodayTag())
+            const cookie = cookieParser(request.headers.get('cookie'));
+            let connectionString = "Put the Startup script here (copied from step 2-07)";
+            if (cookie['connection_string']) {
+                connectionString = cookie['connection_string'];
+            }
+            resBody = fs.readFileSync('src/templates/render.html', 'utf8')
+                .replace(/\[CONNSTR\]/g, connectionString)
                 ;
         } else {
             resBody = fs.readFileSync('src/templates/readme.html', 'utf8')
-                .replace(/\[IMAGE_STATUS\]/g, "not ready")
                 .replace(/\[ACR_NAME\]/g, registryName)
                 .replace(/\[ACR_KEY\]/g, registryKey)
                 .replace(/\[TAG_NAME\]/g, getTodayTag())
@@ -171,7 +175,8 @@ app.http('index', {
             headers: {
                 'Content-Type': 'text/html; charset=utf-8'
             },
-            body: resBody
+            body: resBody,
+            cookies: resCookie
         }
         // const client = redis.createClient({
         //     url: 'redis://default:' + redisKey + '@' + redisName + '.redis.cache.windows.net:' + redisPort
@@ -370,4 +375,14 @@ function getTodayTag() {
     const day = ('0' + date.getDate()).substr(-2);
     const dateStr = [year, month, day].join('');
     return dateStr;
+}
+function cookieParser(cookieString) {
+    if (cookieString === "") return {};
+    let pairs = cookieString.split(";");
+    let splittedPairs = pairs.map(cookie => cookie.split("="));
+    const cookieObj = splittedPairs.reduce(function (obj, cookie) {
+        obj[decodeURIComponent(cookie[0].trim())] = decodeURIComponent(cookie[1].trim());
+        return obj;
+    }, {})
+    return cookieObj;
 }

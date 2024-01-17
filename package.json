@@ -9,6 +9,7 @@
   "dependencies": {
     "@azure/functions": "^4.0.0",
     "@azure/storage-file-share": "^12.17.0",
+    "crypto": "^1.0.1",
     "fs": "^0.0.1-security",
     "redis": "^4.6.12",
     "request": "^2.88.2"

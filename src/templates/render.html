@@ -1,0 +1,170 @@
+<!DOCTYPE html
+    PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+    <link rel="icon" href="https://raw.githubusercontent.com/theringe/winae/master/sample/media/cpimg/favicon.png">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="apple-mobile-web-app-capable" content="no" />
+    <meta name="mobile-web-app-capable" content="no">
+    <meta name="theme-color" content="#343a40" />
+    <!-- META -->
+    <meta name="description" content="A Windows based containerized Adobe After Effects renderer" />
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="WINAE" />
+    <meta property="og:description" content="A Windows based containerized Adobe After Effects renderer" />
+    <meta property="og:image"
+        content="https://raw.githubusercontent.com/theringe/winae/master/sample/media/cpimg/cover.png" />
+    <meta name="twitter:title" content="WINAE">
+    <meta name="twitter:description" content="A Windows based containerized Adobe After Effects renderer">
+    <meta name="twitter:image:src"
+        content="https://raw.githubusercontent.com/theringe/winae/master/sample/media/cpimg/cover.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <title>WINAE</title>
+    <link rel="image_src" href="https://raw.githubusercontent.com/theringe/winae/master/sample/media/cpimg/cover.png">
+    <!-- LIBRARY -->
+    <link rel="stylesheet" href="https://cdn.usebootstrap.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+    <script language="javascript" type="text/javascript"
+        src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/6.65.7/codemirror.min.js"></script>
+    <script language="javascript" type="text/javascript"
+        src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/6.65.7/mode/powershell/powershell.min.js"></script>
+    <link rel="stylesheet" type="text/css"
+        href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/6.65.7/codemirror.min.css">
+    </link>
+    <link rel="stylesheet" type="text/css"
+        href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/6.65.7/theme/abbott.min.css">
+    </link>
+    <style>
+        body {
+            background-color: #faf8ef;
+        }
+
+        h5 {
+            color: #343a40;
+        }
+
+        .footer {
+            margin-top: 5% !important;
+            margin-bottom: 10px;
+        }
+
+        @media (max-width: 500px) {
+            .footer {
+                margin-top: 35% !important;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="media-body mt-4">
+            <h5 class="align-items-center mt-4">WINAE</h5>
+            <h3 class="align-items-center mt-4">Control Panel</h3>
+            <hr />
+        </div>
+        <div class="mt-4">
+            <h6>Startup script</h6>
+            <input type="text" class="form-control" id="connection_string" value="[CONNSTR]">
+            <br>
+            <button class="btn btn-outline-dark btn-block" role="button" id="btn_launch" onclick="javascript: launch();"
+                disabled>Deploy Render Nodes</button>
+            <br>
+            <h6>Status</h6>
+            <input type="text" class="form-control" id="winae_status">
+            <hr>
+        </div>
+        <div class="footer mt-4">
+            <hr />
+            <h6>By Ringe</h6>
+        </div>
+    </div>
+    <script>
+        function launch() {
+            if ($("#connection_string").val().length > 120) {
+                $.ajax({
+                    url: "winae?code=" + getAllUrlParams($(this).location).code,
+                    type: "POST",
+                    data: {
+                        "launconnection_stringch": $("#connection_string").val()
+                    },
+                    success: function (data) {
+                        if (data.succ == true) {
+                            alert('Done');
+                            $("#btn_launch").prop("disabled", true);
+                        } else {
+                            alert('Error: ' + data.msg);
+                        }
+                    },
+                    error: function (xhr, ajaxOptions, thrownError) {
+                        alert(xhr.status);
+                        alert(thrownError);
+                    }
+                });
+            } else {
+                alert('Invalid Connection String');
+
+            }
+        }
+        function getAllUrlParams(url) {
+            var queryString = url ? url.split('?')[1] : window.location.search.slice(1);
+            var obj = {};
+            if (queryString) {
+                queryString = queryString.split('#')[0];
+                var arr = queryString.split('&');
+                for (var i = 0; i < arr.length; i++) {
+                    var a = arr[i].split('=');
+                    var paramName = a[0];
+                    var paramValue = typeof (a[1]) === 'undefined' ? true : a[1];
+                    paramName = paramName.toLowerCase();
+                    if (typeof paramValue === 'string') paramValue = paramValue.toLowerCase();
+                    if (paramName.match(/\[(\d+)?\]$/)) {
+                        var key = paramName.replace(/\[(\d+)?\]/, '');
+                        if (!obj[key]) obj[key] = [];
+                        if (paramName.match(/\[\d+\]$/)) {
+                            var index = /\[(\d+)\]/.exec(paramName)[1];
+                            obj[key][index] = paramValue;
+                        } else {
+                            obj[key].push(paramValue);
+                        }
+                    } else {
+                        if (!obj[paramName]) {
+                            obj[paramName] = paramValue;
+                        } else if (obj[paramName] && typeof obj[paramName] === 'string') {
+                            obj[paramName] = [obj[paramName]];
+                            obj[paramName].push(paramValue);
+                        } else {
+                            obj[paramName].push(paramValue);
+                        }
+                    }
+                }
+            }
+            return obj;
+        }
+        setInterval(function () {
+            $.ajax({
+                url: "winae?code=" + getAllUrlParams($(this).location).code,
+                type: "GET",
+                success: function (data) {
+                    if (data.succ == true) {
+                        $("#winae_status").val(data.msg);
+                        if (data.msg == "OFFLINE") {
+                            $("#btn_launch").prop("disabled", false);
+                        }
+                    } else {
+                        alert('Error: ' + data.msg);
+                    }
+                },
+                error: function (xhr, ajaxOptions, thrownError) {
+                    alert(xhr.status);
+                    alert(thrownError);
+                }
+            });
+        }, 10000);
+    </script>
+
+</body>
+
+</html>

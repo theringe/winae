@@ -29,8 +29,6 @@
     <script language="javascript" type="text/javascript"
         src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/6.65.7/codemirror.min.js"></script>
     <script language="javascript" type="text/javascript"
-        src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/6.65.7/mode/dockerfile/dockerfile.min.js"></script>
-    <script language="javascript" type="text/javascript"
         src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/6.65.7/mode/powershell/powershell.min.js"></script>
     <link rel="stylesheet" type="text/css"
         href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/6.65.7/codemirror.min.css">
@@ -62,14 +60,12 @@
 
 <body>
     <div class="container">
-        <div class="media-body m-7">
-            <h5 class="align-items-center mt-5">WINAE</h5>
-            <h3 class="align-items-center mt-5">Control Panel</h3>
+        <div class="media-body mt-4">
+            <h5 class="align-items-center mt-4">WINAE</h5>
+            <h3 class="align-items-center mt-4">Control Panel</h3>
             <hr />
         </div>
         <div class="mt-4">
-            <a href="#" class="btn btn-outline-dark btn-block" role="button" id="image_status">[IMAGE_STATUS]</a>
-            <br>
             <a href="https://github.com/theringe/winae" class="btn btn-outline-dark btn-block" role="button"
                 id="btn_github" target="_blank">WINAE GitHub</a>
             <br>
@@ -79,7 +75,10 @@
             <p>Your installation process is halfway through. Please refer to the following tutorial to continue setting
                 up the Windows container image for transcoding from step 3. After the setup is complete, please refresh
                 this page.</p>
-            <table class="table">
+            <hr>
+        </div>
+        <div class="mt-4 table-responsive">
+            <table class="table mt-4">
                 <thead>
                     <tr>
                         <th>Step</th>
@@ -91,25 +90,25 @@
                         <td>3</td>
                         <td>Download your genuine After Effects from the <a target="_blank"
                                 href="https://adminconsole.adobe.com/">Adobe Admin Console</a>. We firstly create a
-                            package and specify the preferred name for further use (in 4-??), for example: "AE",
+                            package and specify the preferred name, for example: "AE",
                             selecting "Windows (64-bit)", selecting "English (North America)", then click Create
-                            package. Finally, we could download the file named AE_en_US_WIN_64.zip for further use (in
-                            4-??)</td>
+                            package. Finally, we could download the file named "AE_en_US_WIN_64.zip" for further use (in
+                            4-02)</td>
                     </tr>
                     <tr>
                         <td></td>
                         <td><img src="https://raw.githubusercontent.com/theringe/winae/master/docs/images/3-01.png"
-                                style="max-width: 100%;"></td>
+                                style="width: 100%;"></td>
                     </tr>
                     <tr>
                         <td></td>
                         <td><img src="https://raw.githubusercontent.com/theringe/winae/master/docs/images/3-02.png"
-                                style="max-width: 100%;"></td>
+                                style="width: 100%;"></td>
                     </tr>
                     <tr>
                         <td></td>
                         <td><img src="https://raw.githubusercontent.com/theringe/winae/master/docs/images/3-03.png"
-                                style="max-width: 100%;"></td>
+                                style="width: 100%;"></td>
                     </tr>
                     <tr>
                         <td>4</td>
@@ -128,7 +127,7 @@ cd winae</textarea>
                     <tr>
                         <td></td>
                         <td><img src="https://raw.githubusercontent.com/theringe/winae/master/docs/images/4-01.png"
-                                style="max-width: 100%;"></td>
+                                style="width: 100%;"></td>
                     </tr>
 
                     <tr>
@@ -149,7 +148,7 @@ cd winae</textarea>
                     <tr>
                         <td></td>
                         <td><img src="https://raw.githubusercontent.com/theringe/winae/master/docs/images/4-02.png"
-                                style="max-width: 100%;"></td>
+                                style="width: 100%;"></td>
                     </tr>
 
 
@@ -160,7 +159,7 @@ cd winae</textarea>
                     <tr>
                         <td></td>
                         <td><img src="https://raw.githubusercontent.com/theringe/winae/master/docs/images/4-03.png"
-                                style="max-width: 100%;"></td>
+                                style="width: 100%;"></td>
                     </tr>
 
 
@@ -176,7 +175,7 @@ docker build -t [ACR_NAME].azurecr.io/winae:[TAG_NAME] . --no-cache</textarea>
                     <tr>
                         <td></td>
                         <td><img src="https://raw.githubusercontent.com/theringe/winae/master/docs/images/4-04.png"
-                                style="max-width: 100%;"></td>
+                                style="width: 100%;"></td>
                     </tr>
 
 
@@ -194,7 +193,7 @@ docker push [ACR_NAME].azurecr.io/winae:[TAG_NAME]</textarea>
                     <tr>
                         <td></td>
                         <td><img src="https://raw.githubusercontent.com/theringe/winae/master/docs/images/4-05.png"
-                                style="max-width: 100%;"></td>
+                                style="width: 100%;"></td>
                     </tr>
 
                     <tr>
@@ -204,9 +203,8 @@ docker push [ACR_NAME].azurecr.io/winae:[TAG_NAME]</textarea>
                     </tr>
                 </tbody>
             </table>
-            <hr>
         </div>
-        <div class="footer mt-5">
+        <div class="footer mt-4">
             <hr />
             <h6>By Ringe</h6>
         </div>
