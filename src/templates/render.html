@@ -84,16 +84,16 @@
     <script>
         function launch() {
             if ($("#connection_string").val().length > 120) {
+                $("#btn_launch").prop("disabled", true);
                 $.ajax({
                     url: "winae",
                     type: "POST",
                     data: {
-                        "launconnection_stringch": $("#connection_string").val()
+                        "connection_string": $("#connection_string").val()
                     },
                     success: function (data) {
                         if (data.succ == true) {
                             alert('Done');
-                            $("#btn_launch").prop("disabled", true);
                         } else {
                             alert('Error: ' + data.msg);
                         }
@@ -101,11 +101,11 @@
                     error: function (xhr, ajaxOptions, thrownError) {
                         alert(xhr.status);
                         alert(thrownError);
+                        $("#btn_launch").prop("disabled", false);
                     }
                 });
             } else {
-                alert('Invalid Connection String');
-
+                alert('Invalid Startup script');
             }
         }
         setInterval(function () {

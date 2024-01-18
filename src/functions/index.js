@@ -39,14 +39,13 @@ app.http('index', {
             process.env["WINAE_REDIS_PORT"] = redisPort;
             process.env["WINAE_REDIS_KEY"] = redisKey;
             // Set App Settings to App Service
-            functionAppName = resourcePrefix + '-func';
+            const functionAppName = resourcePrefix + '-func';
             appSettings = await getAppSettings(accessToken, subscriptionId, resourceGroupName, functionAppName);
             appSettings.WINAE_REDIS_NAME = redisName;
             appSettings.WINAE_REDIS_PORT = redisPort;
             appSettings.WINAE_REDIS_KEY = redisKey;
             await setAppSettings(accessToken, subscriptionId, resourceGroupName, functionAppName, appSettings);
             // Setup Files
-            // TODO: Read file into variable and save them into C:\local\Temp folder (App Service only)
             const storageAccountName = resourcePrefix.replace('-', '') + 'sa';
             const storageAccountKey = await getStorageAccountKey(accessToken, subscriptionId, resourceGroupName, storageAccountName);
             var fileClient = null;
@@ -257,7 +256,7 @@ function getAppSettings(accessToken, subscriptionId, resourceGroupName, function
     return new Promise(function (resolve, reject) {
         req(options, function (error, response) {
             if (error) reject(new Error(error));
-            resolve(JSON.parse(response.body).properties);
+            resolve(JSON.parse(response.body).properties || {});
         });
     });
 }
