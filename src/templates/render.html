@@ -26,16 +26,9 @@
     <!-- LIBRARY -->
     <link rel="stylesheet" href="https://cdn.usebootstrap.com/bootstrap/4.3.1/css/bootstrap.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
-    <script language="javascript" type="text/javascript"
-        src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/6.65.7/codemirror.min.js"></script>
-    <script language="javascript" type="text/javascript"
-        src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/6.65.7/mode/powershell/powershell.min.js"></script>
-    <link rel="stylesheet" type="text/css"
-        href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/6.65.7/codemirror.min.css">
-    </link>
-    <link rel="stylesheet" type="text/css"
-        href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/6.65.7/theme/abbott.min.css">
-    </link>
+    <script src="https://cdn.jsdelivr.net/npm/jquery-loadingModal@1.0.2/js/jquery.loadingModal.min.js"></script>
+    <link rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/jquery-loadingModal@1.0.2/css/jquery.loadingModal.min.css">
     <style>
         body {
             background-color: #faf8ef;
@@ -69,11 +62,25 @@
             <h6>Startup script</h6>
             <input type="text" class="form-control" id="connection_string" value="[CONNSTR]">
             <br>
+            <h6>Node counts</h6>
+            <select class="form-control" id="node_count">
+                <option value="1" selected>1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+                <option value="5">5</option>
+                <option value="6">6</option>
+                <option value="7">7</option>
+                <option value="8">8</option>
+                <option value="9">9</option>
+                <option value="10">10</option>
+            </select>
+            <br>
             <button class="btn btn-outline-dark btn-block" role="button" id="btn_launch" onclick="javascript: launch();"
-                disabled>Deploy Render Nodes</button>
+                disabled></button>
             <br>
             <h6>Status</h6>
-            <input type="text" class="form-control" id="winae_status">
+            <input type="text" class="form-control" id="winae_status" readonly>
             <hr>
         </div>
         <div class="footer mt-4">
@@ -89,8 +96,18 @@
             }
             if ($("#connection_string").val().length > 120) {
                 $("#btn_launch").prop("disabled", true);
+                $("#btn_launch").html('WINAE is starting...');
+                $('body').loadingModal({
+                    text: 'Loading...',
+                    position: 'auto',
+                    text: '',
+                    color: '#fff',
+                    opacity: '0.7',
+                    backgroundColor: 'rgb(0,0,0)',
+                    animation: 'doubleBounce'
+                });
                 $.ajax({
-                    url: "winae?connection_string=" + encodeURIComponent($("#connection_string").val()) + debug,
+                    url: "winae?connection_string=" + encodeURIComponent($("#connection_string").val()) + "&node_count=" + $('#node_count').find(":selected").val() + debug,
                     type: "POST",
                     success: function (data) {
                         if (data.succ == true) {
@@ -98,17 +115,49 @@
                         } else {
                             alert('Error: ' + data.msg);
                         }
+                        $('body').loadingModal('destroy');
                     },
                     error: function (xhr, ajaxOptions, thrownError) {
                         alert(xhr.status);
                         alert(thrownError);
                         $("#btn_launch").prop("disabled", false);
+                        $("#btn_launch").html('Launch WINAE renderer nodes');
+                        $('body').loadingModal('destroy');
                     }
                 });
             } else {
                 alert('Invalid Startup script');
             }
         }
+        (function check() {
+            let debug = "";
+            if (getAllUrlParams().name) {
+                debug += "?name=" + getAllUrlParams().name;
+            }
+            $.ajax({
+                url: "winae" + debug,
+                type: "GET",
+                success: function (data) {
+                    if (data.succ == true) {
+                        $("#winae_status").val(data.msg);
+                        if (data.msg == "OFFLINE") {
+                            $("#btn_launch").prop("disabled", false);
+                            $("#btn_launch").html('Launch WINAE renderer nodes');
+                        } else {
+                            $("#btn_launch").prop("disabled", true);
+                            $("#btn_launch").html('WINAE is starting...');
+                        }
+                    } else {
+                        alert('Error: ' + data.msg);
+                    }
+                },
+                error: function (xhr, ajaxOptions, thrownError) {
+                    alert(xhr.status);
+                    alert(thrownError);
+                }
+            });
+            setTimeout(check, 10000);
+        })();
         function getAllUrlParams(url) {
             var queryString = url ? url.split('?')[1] : window.location.search.slice(1);
             var obj = {};
@@ -144,32 +193,6 @@
             }
             return obj;
         }
-        setInterval(function () {
-            let debug = "";
-            if (getAllUrlParams().name) {
-                debug += "?name=" + getAllUrlParams().name;
-            }
-            $.ajax({
-                url: "winae" + debug,
-                type: "GET",
-                success: function (data) {
-                    if (data.succ == true) {
-                        $("#winae_status").val(data.msg);
-                        if (data.msg == "OFFLINE") {
-                            $("#btn_launch").prop("disabled", false);
-                        } else {
-                            $("#btn_launch").prop("disabled", true);
-                        }
-                    } else {
-                        alert('Error: ' + data.msg);
-                    }
-                },
-                error: function (xhr, ajaxOptions, thrownError) {
-                    alert(xhr.status);
-                    alert(thrownError);
-                }
-            });
-        }, 10000);
     </script>
 
 </body>

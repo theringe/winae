@@ -17,7 +17,7 @@ $deleteRound = 50;
     . ($PSScriptRoot + "\winae-core.ps1");
     winae $aadClientId $aadTenantId $aadSecretId $subscriptionId $resourceGroup $appName $aspName $redisHost $redisPort $redisPass $redisPrefix;
     # Delete logic
-    if ($deleteLock -eq 0) {
+    if ($deleteLock -eq 1) {
         continue base;
     }
     if ($deleteRound -gt 0) {

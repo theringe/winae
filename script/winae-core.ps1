@@ -2,7 +2,7 @@
 $interval = 1; # Specify the polling interval in seconds
 $minMachineCount = 1; # From 1 to 10
 $maxMachineCount = 10; # From 1 to 10
-$fixedMachineCount = 0; # Set to 0 to use minMachineCount and maxMachineCount, set to >=1 to use fixedMachineCount
+$fixedMachineCount = 1; # Set to 0 to use minMachineCount and maxMachineCount, set to >=1 to use fixedMachineCount
 $warmupTime = 1800; # Specify the container warmup time in seconds
 $taskFrame = 1440; # Specify the frame count of the task (e.g., 1minutes * 60seconds * 30frames = 1440)
 $aeExec = "C:\Users\ContainerAdministrator\AE\aerender.exe";

@@ -1,7 +1,9 @@
 // Libraries
 const { app } = require('@azure/functions');
+const { ShareFileClient, StorageSharedKeyCredential } = require("@azure/storage-file-share");
 const ioredis = require('ioredis');
 const req = require('request');
+const fs = require('fs');
 
 // Settings
 const APPID = process.env["MICROSOFT_PROVIDER_AUTHENTICATION_APPID"];
@@ -84,6 +86,18 @@ app.http('winae', {
                 const appName = resourcePrefix + '-app';
                 const registryName = resourcePrefix.replace('-', '') + 'cr';
                 const registryKey = await getRegistryKey(accessToken, subscriptionId, resourceGroupName, registryName);
+                // node count (and other potential parameters)
+                const nodeCount = request.query.get('node_count') || await request.text() || '1';
+                fs.writeFileSync('sample/tool/winae-core.ps1', fs.readFileSync('script/winae-core.ps1', 'utf8')
+                    .replace(/fixedMachineCount = 1;/g, "fixedMachineCount = " + nodeCount + ";")
+                );
+                const storageAccountName = resourcePrefix.replace('-', '') + 'sa';
+                const storageAccountKey = await getStorageAccountKey(accessToken, subscriptionId, resourceGroupName, storageAccountName);
+                fileClient = new ShareFileClient(
+                    'https://' + storageAccountName + '.file.core.windows.net/winae-file/' + 'tool/winae-core.ps1',
+                    new StorageSharedKeyCredential(storageAccountName, storageAccountKey)
+                );
+                await fileClient.uploadFile('sample/tool/winae-core.ps1');
                 // Exe
                 const resPlan = await createPlan(accessToken, subscriptionId, resourceGroupName, planName, location);
                 const resApp = await createApp(accessToken, subscriptionId, resourceGroupName, planName, location, appName, registryName, registryKey, WINAE_IMAGE, connectionString);
