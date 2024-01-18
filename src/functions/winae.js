@@ -181,6 +181,22 @@ function getAppSettings(accessToken, subscriptionId, resourceGroupName, function
         });
     });
 }
+function getStorageAccountKey(accessToken, subscriptionId, resourceGroupName, storageAccountName) {
+    var options = {
+        'method': 'POST',
+        'url': 'https://management.azure.com/subscriptions/' + subscriptionId + '/resourceGroups/' + resourceGroupName + '/providers/Microsoft.Storage/storageAccounts/' + storageAccountName + '/listKeys?api-version=2023-01-01',
+        'headers': {
+            'Authorization': 'Bearer ' + accessToken,
+            'Content-type': 'application/json'
+        }
+    };
+    return new Promise(function (resolve, reject) {
+        req(options, function (error, response) {
+            if (error) reject(new Error(error));
+            resolve(JSON.parse(response.body).keys[0].value);
+        });
+    });
+}
 function getLocation(accessToken, subscriptionId, resourceGroupName, functionAppName) {
     var options = {
         'method': 'GET',
