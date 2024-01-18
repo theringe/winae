@@ -19,11 +19,21 @@ app.http('winae', {
     handler: async (request, context) => {
         // Debug App
         const name = request.query.get('name') || await request.text() || 'default value';
-        // Get cookie
-        const connectionString = request.query.get('connection_string') || await request.text() || '';
+        let connectionString = "";
         let resCookie = [];
-        if (connectionString) {
-            resCookie.push(`connection_string=${connectionString}; Path=/; HttpOnly; SameSite=None; Secure`);
+        if (request.method === 'POST') {
+            connectionString = request.query.get('connection_string') || await request.text() || 'default value';
+            connectionString = decodeURIComponent(connectionString);
+            if (connectionString) {
+                resCookie.push({
+                    name: 'connection_string',
+                    value: connectionString,
+                    path: '/',
+                    httpOnly: true,
+                    secure: true,
+                    sameSite: 'None'
+                });
+            }
         }
         // Get image info
         const subdomain = request.url.split('/')[2].split('.')[0];
@@ -50,7 +60,7 @@ app.http('winae', {
                 if (projects.length == 0) {
                     resBody = '{"succ": true, "msg": "ONLINE"}';
                 } else {
-                    resBody = '{"succ": true, "msg": "Rendering project(s): " + projects.join(", ")}';
+                    resBody = '{"succ": true, "msg": "Rendering project(s): ' + projects.join(", ") + '"}';
                 }
             }
             return {
@@ -75,8 +85,8 @@ app.http('winae', {
                 const registryName = resourcePrefix.replace('-', '') + 'cr';
                 const registryKey = await getRegistryKey(accessToken, subscriptionId, resourceGroupName, registryName);
                 // Exe
-                await createPlan(accessToken, subscriptionId, resourceGroupName, planName, location);
-                await createApp(accessToken, subscriptionId, resourceGroupName, planName, location, appName, registryName, registryKey, WINAE_IMAGE, connectionString);
+                const resPlan = await createPlan(accessToken, subscriptionId, resourceGroupName, planName, location);
+                const resApp = await createApp(accessToken, subscriptionId, resourceGroupName, planName, location, appName, registryName, registryKey, WINAE_IMAGE, connectionString);
             }
             return {
                 statusCode: 200,
@@ -219,7 +229,7 @@ function createPlan(accessToken, subscriptionId, resourceGroupName, planName, lo
     return new Promise(function (resolve, reject) {
         req(options, function (error, response) {
             if (error) reject(new Error(error));
-            resolve(JSON.parse(response.body).name || "");
+            resolve(JSON.parse(response.body) || {});
         });
     });
 }
@@ -273,7 +283,7 @@ function createApp(accessToken, subscriptionId, resourceGroupName, planName, loc
     return new Promise(function (resolve, reject) {
         req(options, function (error, response) {
             if (error) reject(new Error(error));
-            resolve(JSON.parse(response.body).name || "");
+            resolve(JSON.parse(response.body) || {});
         });
     });
 }
