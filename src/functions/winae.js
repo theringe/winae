@@ -99,7 +99,7 @@ app.http('winae', {
                 );
                 await fileClient.uploadFile('sample/tool/winae-core.ps1');
                 // Exe
-                const resPlan = await createPlan(accessToken, subscriptionId, resourceGroupName, planName, location);
+                const resPlan = await createPlan(accessToken, subscriptionId, resourceGroupName, planName, location, nodeCount);
                 const resApp = await createApp(accessToken, subscriptionId, resourceGroupName, planName, location, appName, registryName, registryKey, WINAE_IMAGE, connectionString);
             }
             return {
@@ -228,7 +228,7 @@ function getRegistryKey(accessToken, subscriptionId, resourceGroupName, registry
         });
     });
 }
-function createPlan(accessToken, subscriptionId, resourceGroupName, planName, location) {
+function createPlan(accessToken, subscriptionId, resourceGroupName, planName, location, nodeCount) {
     var options = {
         'method': 'PUT',
         'url': 'https://management.azure.com/subscriptions/' + subscriptionId + '/resourceGroups/' + resourceGroupName + '/providers/Microsoft.Web/serverfarms/' + planName + '?api-version=2022-03-01',
@@ -246,7 +246,7 @@ function createPlan(accessToken, subscriptionId, resourceGroupName, planName, lo
                 "name": planName,
                 "workerSize": "10",
                 "workerSizeId": "10",
-                "numberOfWorkers": "1",
+                "numberOfWorkers": nodeCount,
                 "hyperV": true,
                 "zoneRedundant": false
             },
