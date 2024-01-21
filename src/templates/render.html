@@ -24,8 +24,9 @@
     <title>WINAE</title>
     <link rel="image_src" href="https://raw.githubusercontent.com/theringe/winae/master/sample/media/cpimg/cover.png">
     <!-- LIBRARY -->
-    <link rel="stylesheet" href="https://cdn.usebootstrap.com/bootstrap/4.3.1/css/bootstrap.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jquery-loadingModal@1.0.2/js/jquery.loadingModal.min.js"></script>
     <link rel="stylesheet"
         href="https://cdn.jsdelivr.net/npm/jquery-loadingModal@1.0.2/css/jquery.loadingModal.min.css">
@@ -62,22 +63,25 @@
             <h6>Startup script</h6>
             <input type="text" class="form-control" id="connection_string" value="[CONNSTR]">
             <br>
-            <h6>Node counts</h6>
-            <select class="form-control" id="node_count">
-                <option value="1" selected>1</option>
-                <option value="2">2</option>
-                <option value="3">3</option>
-                <option value="4">4</option>
-                <option value="5">5</option>
-                <option value="6">6</option>
-                <option value="7">7</option>
-                <option value="8">8</option>
-                <option value="9">9</option>
-                <option value="10">10</option>
-            </select>
+            <a href="#adv" class="btn btn-outline-dark btn-block" data-toggle="collapse">Advanced Settings</a>
+            <div id="adv" class="collapse">
+                <h6>Node counts</h6>
+                <select class="form-control" id="node_count">
+                    <option value="1" selected>1</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5</option>
+                    <option value="6">6</option>
+                    <option value="7">7</option>
+                    <option value="8">8</option>
+                    <option value="9">9</option>
+                    <option value="10">10</option>
+                </select>
+                </div>
             <br>
             <button class="btn btn-outline-dark btn-block" role="button" id="btn_launch" onclick="javascript: launch();"
-                disabled></button>
+                disabled>　</button>
             <br>
             <h6>Status</h6>
             <input type="text" class="form-control" id="winae_status" readonly>
@@ -193,6 +197,8 @@
             }
             return obj;
         }
+        $(document).ready(function () {
+        });
     </script>
 
 </body>
